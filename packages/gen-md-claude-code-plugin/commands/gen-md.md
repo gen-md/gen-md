@@ -42,7 +42,7 @@ Merged result inherits from all ancestors.
 
 ## Example
 
-Given `feature.gen.md`:
+Given `FEATURE.md.gen.md`:
 ```yaml
 ---
 name: feature-docs
