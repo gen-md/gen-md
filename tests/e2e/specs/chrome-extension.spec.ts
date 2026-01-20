@@ -16,7 +16,7 @@ test.describe("Chrome Extension", () => {
       // Navigate to the extension popup HTML (local file for testing)
       const popupPath = path.resolve(
         __dirname,
-        "../../../packages/gen-md-chrom-ext/popup.html"
+        "../../../packages/gen-md-chrome-ext/popup.html"
       );
 
       // For testing without actual extension, we test the popup HTML directly
@@ -32,7 +32,7 @@ test.describe("Chrome Extension", () => {
     test("should display gen-md branding", async ({ page }) => {
       const popupPath = path.resolve(
         __dirname,
-        "../../../packages/gen-md-chrom-ext/popup.html"
+        "../../../packages/gen-md-chrome-ext/popup.html"
       );
 
       await page.goto(`file://${popupPath}`);
@@ -51,7 +51,7 @@ test.describe("Chrome Extension", () => {
     test("should render options page", async ({ page }) => {
       const optionsPath = path.resolve(
         __dirname,
-        "../../../packages/gen-md-chrom-ext/options.html"
+        "../../../packages/gen-md-chrome-ext/options.html"
       );
 
       await page.goto(`file://${optionsPath}`);
