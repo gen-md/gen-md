@@ -1,5 +1,5 @@
 {
-  "name": "gen-md-vscode",
+  "name": "@gen-md/vscode",
   "displayName": "gen-md",
   "description": "Generative markdown framework for VS Code",
   "version": "0.1.0",
@@ -93,6 +93,8 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "test": "vitest",
+    "clean": "rm -rf dist",
+    "lint": "eslint src/",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

@@ -1,4 +1,4 @@
-import { GitHubContext } from "./types";
+import { GitHubContext } from "./types.js";
 
 /**
  * Extract GitHub context from current URL

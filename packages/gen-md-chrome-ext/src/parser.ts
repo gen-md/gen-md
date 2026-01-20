@@ -1,4 +1,4 @@
-import { ParsedGenMd, GenMdFrontmatter } from "./types";
+import { ParsedGenMd, GenMdFrontmatter } from "./types.js";
 
 /**
  * Simple YAML-like frontmatter parser for browser use

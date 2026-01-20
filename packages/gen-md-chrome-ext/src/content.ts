@@ -1,5 +1,5 @@
-import { parseGenMd, extractInputBlock } from "./parser";
-import { getGitHubContext, fetchRawContent, isGenMdFile } from "./github";
+import { parseGenMd, extractInputBlock } from "./parser.js";
+import { getGitHubContext, fetchRawContent, isGenMdFile } from "./github.js";
 
 /**
  * Create and inject the gen-md info panel into the page
