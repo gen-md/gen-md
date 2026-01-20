@@ -96,7 +96,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@gen-md/core": "workspace:*"
+    "@gen-md/core": "file:../gen-md-core"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
