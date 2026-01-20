@@ -39,6 +39,122 @@ $prompt
 - **Skills**: Reusable instruction sets that define *how* to generate content (patterns, guidelines, standards)
 - **Context**: Specific data or files that provide *what* to include in the generation (source files, data, configurations)
 
+## Cascading Configuration
+
+### How Cascading Works
+
+When resolving a `.gen.md` file, the resolver walks up the directory tree collecting parent `.gen.md` files and merges them from root to leaf:
+
+```
+/project/.gen.md              → Level 0 (root)
+/project/packages/.gen.md     → Level 1
+/project/packages/cli/app.gen.md → Level 2 (target)
+```
+
+Cascade chain: `[Level 0, Level 1, Level 2]`
+
+### Merge Rules
+
+| Field Type | Merge Behavior |
+|------------|----------------|
+| Scalars (name, output) | Child overrides parent |
+| Arrays (context, skills) | Concatenate and deduplicate |
+| Body content | Append child to parent |
+
+### Cascading Patterns
+
+**1. Root-Level Defaults**
+
+Place a `.gen.md` at the project root to define organization-wide standards:
+
+```yaml
+---
+name: "project-defaults"
+skills: ["./.agent/skills/gen-md/SKILL.md"]
+---
+<input>
+Follow the project style guide. Use consistent terminology.
+</input>
+```
+
+**2. Directory-Level Specialization**
+
+Add `.gen.md` files in subdirectories for domain-specific context:
+
+```yaml
+# packages/.gen.md
+---
+name: "package-defaults"
+context: ["./README.md"]
+skills: ["package-documentation"]
+---
+<input>
+Document the package API. Include installation and usage examples.
+</input>
+```
+
+**3. Overriding Parent Settings**
+
+Child generators can override parent values:
+
+```yaml
+# packages/cli/README.gen.md
+---
+name: "cli-readme"
+output: "README.md"
+# This will REPLACE parent's output, but MERGE skills arrays
+---
+```
+
+## Compaction
+
+### When to Use Compaction
+
+Use compaction to:
+- Consolidate related generators into a single file
+- Create a "super generator" from multiple specialized ones
+- Archive and simplify complex generator hierarchies
+
+### Compaction Best Practices
+
+**1. Order Matters**
+
+Files are merged in the order specified. Put base/common generators first:
+
+```bash
+npx gen-md compact base.gen.md specialized.gen.md -o combined.gen.md
+```
+
+**2. Resolve Path Conflicts**
+
+When compacting files from different directories, use `--resolve-paths` to convert to absolute paths, or `--base-path` to set a common reference:
+
+```bash
+npx gen-md compact ./a/file1.gen.md ./b/file2.gen.md --base-path .
+```
+
+**3. Preview Before Writing**
+
+Always preview compacted output with `--dry-run`:
+
+```bash
+npx gen-md compact *.gen.md -o merged.gen.md --dry-run
+```
+
+### Merge Strategies
+
+| Strategy | Array Behavior |
+|----------|----------------|
+| `dedupe` (default) | Concatenate and remove duplicates |
+| `concatenate` | Append without deduplication |
+| `replace` | Child completely replaces parent |
+
+| Strategy | Body Behavior |
+|----------|---------------|
+| `append` (default) | Child body appended after parent |
+| `prepend` | Child body prepended before parent |
+| `replace` | Child body replaces parent |
+
 ## Generation Guidelines
 
 ### Writing Style
@@ -94,8 +210,8 @@ For monorepo projects:
 Example structure section:
 ```
 packages/
-  cli/          - Command-line interface
-  core/         - Core library
+  gen-md-core/  - Core library (parser, resolver, compactor)
+  gen-md-cli/   - Command-line interface
   vscode/       - VS Code extension
   chrome/       - Chrome extension
 ```
@@ -137,3 +253,5 @@ Maintain consistent terminology within a project:
 6. **Inconsistent formatting** - Don't mix formatting styles
 7. **Missing context** - Don't assume knowledge the reader doesn't have
 8. **Broken references** - Don't reference files or sections that don't exist
+9. **Deep nesting without cascading** - Use cascading to flatten complex hierarchies
+10. **Duplicate generators** - Use compaction to consolidate similar generators
