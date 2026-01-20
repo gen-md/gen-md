@@ -23,9 +23,15 @@ As a browser extension: Chrome, Firefox, Safari
 
 1. **Installation**:  
    Install the gen-md CLI via npm:  
-   ```bash
-   npm install -g @gen-md/gen-md
-````
+```bash
+# for a new repo
+npx gen-md init . #creates .gen.md file for the current directory 
+npx gen-md infer . #infers .gen.md file for the current directory and related .gen.md files
+
+#for an existing file
+npx gen-md gen README.md #generates README.md < README.md.gen.md
+npx gen-md infer README.md #infers README.md.gen.md < README.md
+```
 
 2. **Creating a `.gen.md` File**:
    Add a `.gen.md` file next to any file you want to generate. For example:
@@ -58,12 +64,12 @@ As a browser extension: Chrome, Firefox, Safari
 
 ## Advanced Usage
 
-* **Git-Enhanced Prompts**: Gen-MD can incorporate Git commit history to refine the generation prompts, making the output more contextual.
+* **Git-Enhanced Prompts**: gen-md can incorporate Git commit history to refine the generation prompts, making the output more contextual.
 * **Cascading Configurations**: Place a `.gen.md` file in a directory to provide default rules for all files in that directory.
 
 ## Contributing
 
-We welcome contributions! Feel free to open issues, submit templates, or improve the CLI.
+Soon.
 
 ## License
 
