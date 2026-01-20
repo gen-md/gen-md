@@ -14,6 +14,7 @@ Stop writing code for content generation. Instead, groom and cascade in-codebase
 - **Git-Aware Generation**: Incorporate Git history to create more informed, contextual prompts.
 - **Cascading Context**: Define global `.gen.md` files in parent folders to apply common patterns across multiple files.
 - **Compaction**: Merge multiple `.gen.md` files into a single consolidated generator.
+- **Validation**: Verify `.gen.md` files and confirm outputs exist and are aligned.
 
 ## The `.gen.md` File Format
 
@@ -112,6 +113,22 @@ npx gen-md compact file1.gen.md file2.gen.md -o merged.gen.md
 | `--resolve-paths` | Convert relative paths to absolute |
 | `--dry-run` | Preview output without writing |
 
+## Validation
+
+Validate `.gen.md` files to ensure outputs exist and references are valid:
+
+```bash
+npx gen-md validate *.gen.md
+```
+
+**Options:**
+| Option | Description |
+|--------|-------------|
+| `--no-check-output` | Skip checking if output files exist |
+| `--no-check-context` | Skip checking if context files exist |
+| `--no-check-skills` | Skip checking if skill files exist |
+| `--json` | Output results as JSON |
+
 ## CLI Reference
 
 | Command | Description |
@@ -121,6 +138,7 @@ npx gen-md compact file1.gen.md file2.gen.md -o merged.gen.md
 | `infer <file>` | Infer .gen.md from existing file |
 | `compact <files...>` | Merge multiple .gen.md files |
 | `cascade <file>` | Preview cascade chain |
+| `validate <files...>` | Validate .gen.md files |
 
 ## Platform Support
 

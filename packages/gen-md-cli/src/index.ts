@@ -1,1 +1,1 @@
-export { compactCommand, cascadeCommand } from "./commands/index.js";
+export { compactCommand, cascadeCommand, validateCommand } from "./commands/index.js";

@@ -22,3 +22,17 @@ export {
   createCompactor,
   createSerializer,
 } from "./compactor/index.js";
+
+// Validator
+export type {
+  ValidationResult,
+  ValidationError,
+  ValidationWarning,
+  ValidateOptions,
+} from "./validator/index.js";
+
+export {
+  Validator,
+  createValidator,
+  formatValidationResults,
+} from "./validator/index.js";
