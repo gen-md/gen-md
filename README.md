@@ -2,65 +2,82 @@
 
 **gen-md** is a generative markdown framework that lets you define how files are generated using simple `.gen.md` prompts. It provides a standardized way to generate and regenerate files based on context, templates, and skills.
 
-## Why this is useful
-Stop wrting code,instead, groome and cascade in-codbase knowledge for content generation, expansion and verification. gen-md can generate any type of content in a consistent and repeatable manner, from simple markdown files to complex codebases, using natural language.  
+## Why gen-md
 
-## Target supported platfroms
-As a Custom GPT / skill (desktop / mobile): ChatGPT, Claude, Gemini, Anthropic etc
-As an IDE extension: vscode, Google antigravity, Claude Code, Cursor, Codex, Gemini, Windsurf etc
-As a browser extension: Chrome, Firefox, Safari
-
+Stop writing code for content generation. Instead, groom and cascade in-codebase knowledge for content generation, expansion, and verification. gen-md generates any type of content in a consistent and repeatable manner, from simple markdown files to complex codebases, using natural language.
 
 ## Features
 
-- **File-Specific Prompts**: Each `.gen.md` file describes how to generate its corresponding file.  
-- **Metadata-Driven**: Use a simple metadata header to define name, description, context, and skills.  
-- **Context and Skills**: Reference other files or reusable skill modules to enrich the generation process.  
-- **Git-Aware Generation**: Incorporate Git history to create more informed, contextual prompts.  
+- **File-Specific Prompts**: Each `.gen.md` file describes how to generate its corresponding file.
+- **Metadata-Driven**: Use a simple metadata header to define name, description, context, and skills.
+- **Context and Skills**: Reference other files or reusable skill modules to enrich the generation process.
+- **Git-Aware Generation**: Incorporate Git history to create more informed, contextual prompts.
 - **Cascading Context**: Define global `.gen.md` files in parent folders to apply common patterns across multiple files.
+
+## The `.gen.md` File Format
+
+A `.gen.md` file is a markdown file with YAML frontmatter that controls generation:
+
+```markdown
+---
+name: "Generator Name"
+description: "What this generator produces"
+context: ["./path/to/context.file"]
+skills: ["skill-name", "./path/to/SKILL.md"]
+prompt: $prompt
+output: "output-filename.ext"
+---
+
+<input>
+Generation instructions go here.
+$prompt
+</input>
+```
+
+**Frontmatter Fields:**
+| Field | Description |
+|-------|-------------|
+| `name` | Human-readable identifier for the generator |
+| `description` | Brief explanation of what gets generated |
+| `context` | Array of file paths to include as context |
+| `skills` | Array of skill references (by name or path) |
+| `prompt` | Variable placeholder for dynamic input |
+| `output` | The target output filename |
+
+## Monorepo Structure
+
+```
+packages/
+  cli/          - Command-line interface
+  core/         - Core library and base skill
+  vscode/       - VS Code extension
+  chrome/       - Chrome extension
+```
 
 ## Getting Started
 
-1. **Installation**:  
-   Install the gen-md CLI via npm:  
-```bash
-# for a new repo
-npx gen-md init . #creates .gen.md file for the current directory 
-npx gen-md infer . #infers .gen.md file for the current directory and related .gen.md files
+Install and use the gen-md CLI via npx:
 
-#for an existing file
-npx gen-md gen README.md #generates README.md < README.md.gen.md
-npx gen-md infer README.md #infers README.md.gen.md < README.md
+```bash
+# Initialize a new repo
+npx gen-md init .          # Creates .gen.md file for the current directory
+npx gen-md infer .         # Infers .gen.md file for the current directory
+
+# Work with existing files
+npx gen-md gen README.md   # Generates README.md from README.md.gen.md
+npx gen-md infer README.md # Infers README.md.gen.md from README.md
 ```
 
-2. **Creating a `.gen.md` File**:
-   Add a `.gen.md` file next to any file you want to generate. For example:
+## Platform Support
 
-   ```markdown
-   ---
-   name: "Example Generator"
-   description: "Generates a sample markdown file"
-   context: ["./data/info.json"]
-   skills: ["common-templates", "markdown-boilerplate"]
-   ---
+**AI Assistants** (desktop/mobile):
+- ChatGPT, Claude, Gemini
 
-   # Hello, World!
+**IDE Extensions**:
+- VS Code, Google IDX, Claude Code, Cursor, Windsurf
 
-   This is a generated file based on the context and skills provided.
-   ```
-
-3. **Running the Generator**:
-   Use the CLI to generate files:
-
-   ```bash
-   gen-md generate path/to/file.md
-   ```
-
-   Or create a `.gen.md` from an existing file:
-
-   ```bash
-   gen-md infer path/to/existing-file.md
-   ```
+**Browser Extensions**:
+- Chrome, Firefox, Safari
 
 ## Advanced Usage
 
