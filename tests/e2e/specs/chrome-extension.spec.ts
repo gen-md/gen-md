@@ -38,7 +38,7 @@ test.describe("Chrome Extension", () => {
       await page.goto(`file://${popupPath}`);
 
       // Check for gen-md branding elements
-      const title = page.locator("h1, .title, [data-testid='title']");
+      const _title = page.locator("h1, .title, [data-testid='title']");
 
       // Take screenshot for documentation
       await page.screenshot({

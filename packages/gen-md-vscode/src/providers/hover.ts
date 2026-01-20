@@ -11,7 +11,7 @@ export class GenMdHoverProvider implements vscode.HoverProvider {
   async provideHover(
     document: vscode.TextDocument,
     position: vscode.Position,
-    token: vscode.CancellationToken
+    _token: vscode.CancellationToken
   ): Promise<vscode.Hover | null> {
     const config = vscode.workspace.getConfiguration("gen-md");
     if (!config.get("showCascadeOnHover")) {

@@ -1,5 +1,5 @@
 import * as vscode from "vscode";
-import { CascadingResolver, GenMdParser } from "@gen-md/core";
+import { CascadingResolver } from "@gen-md/core";
 
 export async function generateCommand(uri?: vscode.Uri) {
   const fileUri = uri || vscode.window.activeTextEditor?.document.uri;

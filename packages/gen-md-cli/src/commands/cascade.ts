@@ -1,9 +1,5 @@
 import { Command } from "commander";
-import {
-  createResolver,
-  type ArrayMergeStrategy,
-  type BodyMergeStrategy,
-} from "@gen-md/core";
+import { createResolver } from "@gen-md/core";
 
 export const cascadeCommand = new Command("cascade")
   .description("Preview the cascade chain for a .gen.md file")

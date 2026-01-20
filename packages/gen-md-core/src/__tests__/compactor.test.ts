@@ -63,14 +63,14 @@ describe("GenMdSerializer", () => {
 describe("Compactor", () => {
   describe("merge strategies", () => {
     it("should dedupe arrays by default", async () => {
-      const compactor = new Compactor({ arrayMerge: "dedupe" });
+      const _compactor = new Compactor({ arrayMerge: "dedupe" });
 
       // Test internal merging logic via parsing mock files
       // In real tests, we'd use actual file fixtures
     });
 
     it("should append body content by default", async () => {
-      const compactor = new Compactor({ bodyMerge: "append" });
+      const _compactor = new Compactor({ bodyMerge: "append" });
 
       // Body merge logic test
     });

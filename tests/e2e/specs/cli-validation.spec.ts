@@ -139,14 +139,14 @@ This should fail validation.
 
       // Run actual CLI validation - expect it to fail
       let cliOutput: string;
-      let cliExitCode = 0;
+      let _cliExitCode = 0;
       try {
         const result = await execAsync(`node ${CLI_PATH} validate ${genMdPath}`);
         cliOutput = result.stdout;
       } catch (error: unknown) {
         const execError = error as { stdout?: string; stderr?: string; code?: number };
         cliOutput = execError.stdout || execError.stderr || "Unknown error";
-        cliExitCode = execError.code || 1;
+        _cliExitCode = execError.code || 1;
       }
 
       // Verify CLI reports errors

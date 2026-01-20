@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test } from "@playwright/test";
 
 /**
  * E2E tests for the gen-md web demo/documentation site
