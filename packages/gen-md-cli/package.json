@@ -13,7 +13,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@gen-md/core": "workspace:*",
+    "@gen-md/core": "file:../gen-md-core",
     "commander": "^12.0.0"
   },
   "devDependencies": {

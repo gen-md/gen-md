@@ -1,0 +1,17 @@
+{
+  "name": "@gen-md/chrome-ext",
+  "version": "1.0.0",
+  "description": "Chrome extension for .gen.md files on GitHub",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "typescript": "^5.3.3",
+    "vitest": "^2.0.0"
+  }
+}

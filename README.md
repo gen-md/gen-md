@@ -2,19 +2,21 @@
 
 **gen-md** is a generative markdown framework that lets you define how files are generated using simple `.gen.md` prompts. It provides a standardized way to generate and regenerate files based on context, templates, and skills.
 
+![gen-md Landing](./tests/e2e/screenshots/gen-md-landing.png)
+
 ## Why gen-md
 
 Stop writing code for content generation. Instead, groom and cascade in-codebase knowledge for content generation, expansion, and verification. gen-md generates any type of content in a consistent and repeatable manner, from simple markdown files to complex codebases, using natural language.
 
 ## Features
 
-- **File-Specific Prompts**: Each `.gen.md` file describes how to generate its corresponding file.
-- **Metadata-Driven**: Use a simple metadata header to define name, description, context, and skills.
-- **Context and Skills**: Reference other files or reusable skill modules to enrich the generation process.
-- **Git-Aware Generation**: Incorporate Git history to create more informed, contextual prompts.
-- **Cascading Context**: Define global `.gen.md` files in parent folders to apply common patterns across multiple files.
-- **Compaction**: Merge multiple `.gen.md` files into a single consolidated generator.
-- **Validation**: Verify `.gen.md` files and confirm outputs exist and are aligned.
+- **File-Specific Prompts**: Each `.gen.md` file describes how to generate its corresponding file
+- **Metadata-Driven**: Use a simple metadata header to define name, description, context, and skills
+- **Context and Skills**: Reference other files or reusable skill modules to enrich the generation process
+- **Git-Aware Generation**: Incorporate Git history to create more informed, contextual prompts
+- **Cascading Context**: Define global `.gen.md` files in parent folders to apply common patterns
+- **Compaction**: Merge multiple `.gen.md` files into a single consolidated generator
+- **Validation**: Verify `.gen.md` files and confirm outputs exist and are aligned
 
 ## The `.gen.md` File Format
 
@@ -46,28 +48,120 @@ $prompt
 | `prompt` | Variable placeholder for dynamic input |
 | `output` | The target output filename |
 
+## Packages
+
+### @gen-md/core
+
+Core library providing parsing, cascading resolution, compaction, and validation.
+
+```bash
+npm install @gen-md/core
+```
+
+```typescript
+import {
+  GenMdParser,
+  CascadingResolver,
+  Compactor,
+  Validator
+} from '@gen-md/core';
+
+// Parse a .gen.md file
+const parser = new GenMdParser();
+const file = await parser.parse('./README.gen.md');
+
+// Resolve cascade chain
+const resolver = new CascadingResolver();
+const resolved = await resolver.resolve('./packages/cli/README.gen.md');
+
+// Compact multiple files
+const compactor = new Compactor({ arrayMerge: 'dedupe' });
+const merged = await compactor.compact(['a.gen.md', 'b.gen.md']);
+
+// Validate files
+const validator = new Validator();
+const results = await validator.validateAll(['*.gen.md']);
+```
+
+### @gen-md/cli
+
+Command-line interface for gen-md operations.
+
+```bash
+npm install -g @gen-md/cli
+# or use via npx
+npx gen-md <command>
+```
+
+### Extensions
+
+| Package | Platform | Status |
+|---------|----------|--------|
+| `gen-md-vscode` | VS Code | In Development |
+| `gen-md-chrom-ext` | Chrome | In Development |
+| `gen-md-claude-code-plugin` | Claude Code | In Development |
+| `gen-md-openai-custom-gpt` | ChatGPT | Planned |
+| `gen-md-antigravity` | Google IDX | Planned |
+
 ## Monorepo Structure
 
 ```
-packages/
-  gen-md-core/  - Core library (parser, resolver, compactor)
-  gen-md-cli/   - Command-line interface
-  vscode/       - VS Code extension
-  chrome/       - Chrome extension
+gen-md/
+├── packages/
+│   ├── gen-md-core/          # Core library
+│   │   ├── src/
+│   │   │   ├── types/        # TypeScript interfaces
+│   │   │   ├── parser/       # .gen.md file parser
+│   │   │   ├── resolver/     # Cascading resolver
+│   │   │   ├── compactor/    # File merger & serializer
+│   │   │   ├── validator/    # Validation system
+│   │   │   └── __tests__/    # Unit tests
+│   │   └── package.json
+│   ├── gen-md-cli/           # CLI package
+│   │   ├── src/
+│   │   │   ├── commands/     # CLI commands
+│   │   │   └── __tests__/    # Unit tests
+│   │   ├── bin/
+│   │   └── package.json
+│   ├── gen-md-vscode/        # VS Code extension
+│   ├── gen-md-chrom-ext/     # Chrome extension
+│   └── ...
+├── tests/
+│   └── e2e/                  # Playwright E2E tests
+│       ├── specs/
+│       └── screenshots/
+└── .agent/
+    └── skills/
+        └── gen-md/
+            └── SKILL.md      # Generation skill
 ```
 
 ## Getting Started
 
-Install and use the gen-md CLI via npx:
+### Installation
 
 ```bash
-# Initialize a new repo
-npx gen-md init .          # Creates .gen.md file for the current directory
-npx gen-md infer .         # Infers .gen.md file for the current directory
+# Install CLI globally
+npm install -g @gen-md/cli
 
-# Work with existing files
-npx gen-md gen README.md   # Generates README.md from README.md.gen.md
-npx gen-md infer README.md # Infers README.md.gen.md from README.md
+# Or use via npx (no install required)
+npx gen-md --help
+```
+
+### Quick Start
+
+```bash
+# Initialize a new repo with .gen.md
+npx gen-md init .
+
+# Create a generator for README
+npx gen-md infer README.md
+
+# Generate from .gen.md file
+npx gen-md gen README.md
+
+# Validate all generators
+npx gen-md validate *.gen.md
 ```
 
 ## Cascading Configuration
@@ -84,7 +178,8 @@ project/
 ```
 
 When resolving `app.gen.md`, the cascade chain merges configurations:
-- Result: `skills: ["base", "pkg-common", "cli-skill"]`
+
+![Cascade Visualization](./tests/e2e/screenshots/gen-md-cascade.png)
 
 **Merge Rules:**
 - Scalar values: child overrides parent
@@ -121,6 +216,8 @@ Validate `.gen.md` files to ensure outputs exist and references are valid:
 npx gen-md validate *.gen.md
 ```
 
+![Validation Output](./tests/e2e/screenshots/gen-md-validate.png)
+
 **Options:**
 | Option | Description |
 |--------|-------------|
@@ -140,6 +237,41 @@ npx gen-md validate *.gen.md
 | `cascade <file>` | Preview cascade chain |
 | `validate <files...>` | Validate .gen.md files |
 
+## Editor Integration
+
+![Editor View](./tests/e2e/screenshots/gen-md-editor.png)
+
+The gen-md editor provides:
+- Split view with input (.gen.md) and output preview
+- Syntax highlighting for YAML frontmatter
+- Real-time generation preview
+- Cascade chain visualization
+
+## Testing
+
+### Unit Tests
+
+```bash
+# Run core library tests
+cd packages/gen-md-core && npm test
+
+# Run CLI tests
+cd packages/gen-md-cli && npm test
+```
+
+### E2E Tests
+
+```bash
+# Run Playwright E2E tests
+cd tests/e2e && npm test
+
+# Run with UI
+npm run test:ui
+
+# Run headed (visible browser)
+npm run test:headed
+```
+
 ## Platform Support
 
 **AI Assistants** (desktop/mobile):
@@ -151,14 +283,9 @@ npx gen-md validate *.gen.md
 **Browser Extensions**:
 - Chrome, Firefox, Safari
 
-## Advanced Usage
-
-* **Git-Enhanced Prompts**: gen-md can incorporate Git commit history to refine the generation prompts, making the output more contextual.
-* **Cascading Configurations**: Place a `.gen.md` file in a directory to provide default rules for all files in that directory.
-
 ## Contributing
 
-Soon.
+Contributions are welcome! Please read our contributing guidelines before submitting PRs.
 
 ## License
 

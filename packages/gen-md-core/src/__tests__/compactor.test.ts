@@ -41,7 +41,7 @@ describe("GenMdSerializer", () => {
     expect(result).toContain("context:");
     expect(result).toContain('- "./a.json"');
     expect(result).toContain('- "./b.json"');
-    expect(result).toContain('skills: "./skill1"'); // Single item as inline
+    expect(result).toContain('skills: "skill1"'); // Single item as inline
   });
 
   it("should handle empty arrays", () => {
