@@ -1,0 +1,17 @@
+{
+  "name": "gen-md",
+  "version": "1.0.0",
+  "description": "Generative Markdown framework for Claude Code - create, validate, and manage .gen.md files",
+  "author": "gen-md",
+  "commands": [
+    "commands/gen-md.md",
+    "commands/validate.md",
+    "commands/cascade.md"
+  ],
+  "hooks": [
+    "hooks/detect-gen-md.md"
+  ],
+  "skills": [
+    "../../.agent/skills/gen-md/SKILL.md"
+  ]
+}
