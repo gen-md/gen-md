@@ -1,0 +1,82 @@
+---
+name: gen-md-cli-readme
+description: Generate README for @gen-md/cli - command-line interface with cascade, validate, and compact commands
+context:
+  - "./bin/gen-md.ts"
+  - "./src/commands/index.ts"
+  - "./src/commands/cascade.ts"
+  - "./src/commands/validate.ts"
+  - "./src/commands/compact.ts"
+  - "./package.json"
+output: README.md
+---
+<input>
+Generate a comprehensive README.md for @gen-md/cli, the command-line interface for gen-md.
+
+## Package Info
+- Name: @gen-md/cli
+- Version: 0.1.0
+- Binary: gen-md
+- Dependencies: @gen-md/core, commander
+
+## Commands (3 implemented)
+
+### 1. cascade - Preview cascade chain
+```
+gen-md cascade <file> [options]
+```
+
+**Arguments:**
+- `<file>` - Target .gen.md file
+
+**Options:**
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--stop-at <dir>` | Stop cascade at directory | - |
+| `--max-depth <n>` | Maximum cascade depth | 10 |
+| `--json` | Output as JSON | false |
+| `--show-merged` | Show merged configuration | false |
+
+### 2. validate - Validate .gen.md files
+```
+gen-md validate <files...> [options]
+```
+
+**Arguments:**
+- `<files...>` - Input .gen.md files to validate
+
+**Options:**
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--no-check-output` | Skip checking if output files exist | - |
+| `--no-check-context` | Skip checking if context files exist | - |
+| `--no-check-skills` | Skip checking if skill files exist | - |
+| `--json` | Output results as JSON | false |
+
+### 3. compact - Merge multiple .gen.md files
+```
+gen-md compact <files...> [options]
+```
+
+**Arguments:**
+- `<files...>` - Input .gen.md files to compact
+
+**Options:**
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-o, --output <file>` | Output file path | merged.gen.md |
+| `--array-merge <strategy>` | concatenate\|dedupe\|replace | dedupe |
+| `--body-merge <strategy>` | append\|prepend\|replace | append |
+| `--resolve-paths` | Convert relative paths to absolute | false |
+| `--base-path <path>` | Base path for relative path conversion | - |
+| `--dry-run` | Preview output without writing file | false |
+
+## Include in README
+
+1. Installation: `npm install -g @gen-md/cli` or `npx @gen-md/cli`
+2. Usage examples for each command
+3. Command reference table
+4. Exit codes documentation
+5. Link to @gen-md/core for programmatic usage
+6. Link to monorepo README
+</input>

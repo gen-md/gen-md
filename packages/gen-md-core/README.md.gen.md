@@ -1,0 +1,80 @@
+---
+name: gen-md-core-readme
+description: Generate README for @gen-md/core - the core library with parser, resolver, compactor, validator, and serializer
+context:
+  - "./src/index.ts"
+  - "./src/types/index.ts"
+  - "./src/parser/index.ts"
+  - "./src/resolver/index.ts"
+  - "./src/compactor/index.ts"
+  - "./src/validator/index.ts"
+  - "./src/serializer/index.ts"
+  - "./src/utils/merge.ts"
+  - "./package.json"
+output: README.md
+---
+<input>
+Generate a comprehensive README.md for @gen-md/core, the core library of the gen-md framework.
+
+## Package Info
+- Name: @gen-md/core
+- Version: 0.1.0
+- Dependencies: js-yaml
+
+## API Documentation
+
+### Classes
+
+1. **GenMdParser** - Parse .gen.md files
+   - `parse(filePath: string): Promise<GenMdFile>` - Parse from file path
+   - `parseContent(content: string, filePath?: string): GenMdFile` - Parse from string
+   - Factory: `createParser()`
+
+2. **CascadingResolver** - Walk directory tree upward resolving cascade chains
+   - `resolve(targetPath: string): Promise<ResolvedGenMdConfig>` - Resolve with merged config
+   - Options: `contextMerge`, `skillsMerge` (ArrayMergeStrategy), `bodyMerge` (BodyMergeStrategy), `stopAt`, `maxDepth`
+   - Features: Circular reference detection, symlink loop handling
+   - Factory: `createResolver(options?)`
+
+3. **Compactor** - Merge multiple .gen.md files into single file
+   - `compact(inputPaths: string[]): Promise<GenMdFile>` - Returns merged file
+   - Options: `arrayMerge`, `bodyMerge`, `output`, `resolvePaths`, `basePath`
+   - Factory: `createCompactor(options?)`
+
+4. **Validator** - Validate .gen.md files and dependencies
+   - `validate(genMdPath: string): Promise<ValidationResult>` - Single file
+   - `validateAll(genMdPaths: string[]): Promise<ValidationResult[]>` - Batch
+   - Options: `checkOutputExists`, `checkContextExists`, `checkSkillsExist`, `checkContentHash`
+   - Uses SHA-256 hashing for content verification
+   - Factory: `createValidator(options?)`
+
+5. **GenMdSerializer** - Serialize GenMdFile to .gen.md format
+   - `serialize(file: GenMdFile): string` - Returns formatted string
+   - Factory: `createSerializer()`
+
+### Types
+
+- `GenMdFile` - { filePath, frontmatter, body, raw }
+- `GenMdFrontmatter` - { name?, description?, context?, skills?, prompt?, output?, [key]: unknown }
+- `ResolvedGenMdConfig` - { chain, frontmatter, body, resolvedContext, resolvedSkills }
+- `ArrayMergeStrategy` - "concatenate" | "prepend" | "replace" | "dedupe" | "dedupe-last"
+- `BodyMergeStrategy` - "append" | "prepend" | "replace"
+- `ValidationResult` - { genMdPath, outputPath, passed, errors[], warnings[] }
+- `ValidationError` - missing_output | content_mismatch | invalid_gen_md | missing_context | missing_skill
+- `ValidationWarning` - stale_output | unused_context | empty_body
+
+### Utility Functions
+
+- `mergeArrays<T>(parent, child, strategy)` - Merge arrays with strategy
+- `mergeBody(parent, child, strategy)` - Merge body content
+- `deduplicateArray<T>(arr)` - Remove duplicates preserving order
+- `formatValidationResults(results)` - Format for console output
+
+## Include
+
+1. Installation: `npm install @gen-md/core`
+2. Quick example showing parser + resolver usage
+3. Each class with code example
+4. Type exports table
+5. Link to monorepo README
+</input>
