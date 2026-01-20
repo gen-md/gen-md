@@ -1,11 +1,10 @@
 import * as path from "node:path";
 import { GenMdParser } from "../parser/index.js";
+import { mergeArrays, mergeBody, deduplicateArray } from "../utils/merge.js";
 import type {
   GenMdFile,
   GenMdFrontmatter,
   CompactOptions,
-  ArrayMergeStrategy,
-  BodyMergeStrategy,
 } from "../types/index.js";
 
 /**
@@ -57,14 +56,10 @@ export class Compactor {
 
     // Deduplicate arrays
     if (merged.frontmatter.context) {
-      merged.frontmatter.context = this.deduplicateArray(
-        merged.frontmatter.context
-      );
+      merged.frontmatter.context = deduplicateArray(merged.frontmatter.context);
     }
     if (merged.frontmatter.skills) {
-      merged.frontmatter.skills = this.deduplicateArray(
-        merged.frontmatter.skills
-      );
+      merged.frontmatter.skills = deduplicateArray(merged.frontmatter.skills);
     }
 
     // Optionally convert back to relative paths
@@ -133,7 +128,7 @@ export class Compactor {
 
     for (const file of rest) {
       merged = this.mergeFrontmatter(merged, file.frontmatter);
-      mergedBody = this.mergeBody(mergedBody, file.body);
+      mergedBody = this.mergeBodyContent(mergedBody, file.body);
     }
 
     return {
@@ -157,7 +152,7 @@ export class Compactor {
       if (value === undefined) continue;
 
       if (Array.isArray(value) && Array.isArray(parent[key])) {
-        result[key] = this.mergeArrays(
+        result[key] = mergeArrays(
           parent[key] as unknown[],
           value,
           this.options.arrayMerge
@@ -172,56 +167,10 @@ export class Compactor {
   }
 
   /**
-   * Merge arrays based on strategy
+   * Merge body content using shared utility
    */
-  private mergeArrays(
-    parent: unknown[],
-    child: unknown[],
-    strategy: ArrayMergeStrategy
-  ): unknown[] {
-    switch (strategy) {
-      case "replace":
-        return [...child];
-      case "prepend":
-        return [...child, ...parent];
-      case "concatenate":
-        return [...parent, ...child];
-      case "dedupe":
-        return [...new Set([...parent, ...child])];
-      case "dedupe-last": {
-        const combined = [...parent, ...child];
-        return combined.filter(
-          (item, index) => combined.lastIndexOf(item) === index
-        );
-      }
-      default:
-        return [...parent, ...child];
-    }
-  }
-
-  /**
-   * Merge body content based on strategy
-   */
-  private mergeBody(parent: string, child: string): string {
-    if (!parent.trim()) return child;
-    if (!child.trim()) return parent;
-
-    switch (this.options.bodyMerge) {
-      case "replace":
-        return child;
-      case "prepend":
-        return `${child}\n\n${parent}`;
-      case "append":
-      default:
-        return `${parent}\n\n${child}`;
-    }
-  }
-
-  /**
-   * Deduplicate array preserving order (first occurrence wins)
-   */
-  private deduplicateArray<T>(arr: T[]): T[] {
-    return [...new Set(arr)];
+  private mergeBodyContent(parent: string, child: string): string {
+    return mergeBody(parent, child, this.options.bodyMerge);
   }
 }
 

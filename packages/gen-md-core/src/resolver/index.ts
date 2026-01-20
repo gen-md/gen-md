@@ -1,13 +1,12 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { GenMdParser } from "../parser/index.js";
+import { mergeArrays, mergeBody } from "../utils/merge.js";
 import type {
   GenMdFile,
   GenMdFrontmatter,
   ResolvedGenMdConfig,
   CascadeOptions,
-  ArrayMergeStrategy,
-  BodyMergeStrategy,
 } from "../types/index.js";
 
 /**
@@ -76,10 +75,12 @@ export class CascadingResolver {
 
   /**
    * Walk directory tree upward collecting .gen.md files
+   * Detects circular references (e.g., from symlink loops)
    */
   private async collectCascadeChain(targetPath: string): Promise<string[]> {
     const chain: string[] = [];
     const targetDir = path.dirname(targetPath);
+    const visited = new Set<string>();
 
     let currentDir = targetDir;
     let depth = 0;
@@ -89,6 +90,23 @@ export class CascadingResolver {
 
     // Walk upward collecting parent .gen.md files
     while (depth < this.options.maxDepth) {
+      // Resolve to real path to detect symlink loops
+      let realCurrentDir: string;
+      try {
+        realCurrentDir = await fs.realpath(currentDir);
+      } catch {
+        // If realpath fails, use the original path
+        realCurrentDir = currentDir;
+      }
+
+      // Check for circular reference
+      if (visited.has(realCurrentDir)) {
+        throw new Error(
+          `Circular reference detected in cascade chain at: ${currentDir}`
+        );
+      }
+      visited.add(realCurrentDir);
+
       // Look for .gen.md in current directory
       const candidate = path.join(currentDir, ".gen.md");
 
@@ -143,7 +161,7 @@ export class CascadingResolver {
     for (let i = 1; i < chain.length; i++) {
       const current = chain[i];
       merged = this.mergeFrontmatter(merged, current.frontmatter);
-      mergedBody = this.mergeBody(mergedBody, current.body);
+      mergedBody = this.mergeBodyContent(mergedBody, current.body);
     }
 
     return { frontmatter: merged, body: mergedBody };
@@ -171,7 +189,7 @@ export class CascadingResolver {
               ? this.options.skillsMerge
               : "concatenate";
 
-        result[key] = this.mergeArrays(
+        result[key] = mergeArrays(
           parent[key] as unknown[],
           value,
           strategy
@@ -186,50 +204,10 @@ export class CascadingResolver {
   }
 
   /**
-   * Merge arrays based on strategy
+   * Merge body content using shared utility
    */
-  private mergeArrays(
-    parent: unknown[],
-    child: unknown[],
-    strategy: ArrayMergeStrategy
-  ): unknown[] {
-    switch (strategy) {
-      case "replace":
-        return [...child];
-      case "prepend":
-        return [...child, ...parent];
-      case "concatenate":
-        return [...parent, ...child];
-      case "dedupe":
-        return [...new Set([...parent, ...child])];
-      case "dedupe-last": {
-        // Keep last occurrence of duplicates
-        const combined = [...parent, ...child];
-        return combined.filter(
-          (item, index) => combined.lastIndexOf(item) === index
-        );
-      }
-      default:
-        return [...parent, ...child];
-    }
-  }
-
-  /**
-   * Merge body content based on strategy
-   */
-  private mergeBody(parent: string, child: string): string {
-    if (!parent.trim()) return child;
-    if (!child.trim()) return parent;
-
-    switch (this.options.bodyMerge) {
-      case "replace":
-        return child;
-      case "prepend":
-        return `${child}\n\n${parent}`;
-      case "append":
-      default:
-        return `${parent}\n\n${child}`;
-    }
+  private mergeBodyContent(parent: string, child: string): string {
+    return mergeBody(parent, child, this.options.bodyMerge);
   }
 
   /**

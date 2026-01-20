@@ -36,3 +36,6 @@ export {
   createValidator,
   formatValidationResults,
 } from "./validator/index.js";
+
+// Utilities
+export { mergeArrays, mergeBody, deduplicateArray } from "./utils/merge.js";

@@ -98,7 +98,7 @@ npx gen-md <command>
 | Package | Platform | Status |
 |---------|----------|--------|
 | `gen-md-vscode` | VS Code | In Development |
-| `gen-md-chrom-ext` | Chrome | In Development |
+| `gen-md-chrome-ext` | Chrome | In Development |
 | `gen-md-claude-code-plugin` | Claude Code | In Development |
 | `gen-md-openai-custom-gpt` | ChatGPT | Planned |
 | `gen-md-antigravity` | Google IDX | Planned |
@@ -124,7 +124,7 @@ gen-md/
 │   │   ├── bin/
 │   │   └── package.json
 │   ├── gen-md-vscode/        # VS Code extension
-│   ├── gen-md-chrom-ext/     # Chrome extension
+│   ├── gen-md-chrome-ext/     # Chrome extension
 │   └── ...
 ├── tests/
 │   └── e2e/                  # Playwright E2E tests

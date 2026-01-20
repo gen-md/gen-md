@@ -7,6 +7,9 @@ import * as os from "node:os";
 
 const execAsync = promisify(exec);
 
+// Path to the CLI
+const CLI_PATH = path.resolve(__dirname, "../../../packages/gen-md-cli/dist/bin/gen-md.js");
+
 /**
  * E2E tests for CLI validation functionality
  *
@@ -45,7 +48,23 @@ Generate test content.
 
       await fs.writeFile(outputPath, "Generated test content.");
 
-      // Display validation result in browser
+      // Run actual CLI validation
+      let cliOutput: string;
+      let cliExitCode = 0;
+      try {
+        const result = await execAsync(`node ${CLI_PATH} validate ${genMdPath}`);
+        cliOutput = result.stdout;
+      } catch (error: unknown) {
+        const execError = error as { stdout?: string; stderr?: string; code?: number };
+        cliOutput = execError.stdout || execError.stderr || "Unknown error";
+        cliExitCode = execError.code || 1;
+      }
+
+      // Verify CLI output
+      expect(cliOutput).toContain("passed");
+      expect(cliExitCode).toBe(0);
+
+      // Display validation result in browser for screenshot
       await page.setContent(`
         <html>
           <head>
@@ -70,6 +89,7 @@ Generate test content.
               h1 { color: #667eea; margin-bottom: 20px; }
               .file { color: #9cdcfe; }
               .status { margin: 10px 0; }
+              pre { white-space: pre-wrap; background: #1a1a1a; padding: 15px; border-radius: 4px; }
             </style>
           </head>
           <body>
@@ -84,6 +104,8 @@ Generate test content.
                 Status: PASSED
               </div>
             </div>
+            <h2>CLI Output:</h2>
+            <pre>${cliOutput}</pre>
             <div style="margin-top: 20px; color: #4caf50;">
               Results: 1 passed, 0 failed
             </div>
@@ -97,7 +119,39 @@ Generate test content.
       });
     });
 
-    test("should show validation errors", async ({ page }) => {
+    test("should show validation errors for missing output", async ({ page }) => {
+      // Create test file WITHOUT the output file
+      const genMdPath = path.join(tempDir, "broken.gen.md");
+
+      await fs.writeFile(
+        genMdPath,
+        `---
+name: "Broken Generator"
+output: "missing-output.md"
+context:
+  - "./missing-data.json"
+---
+<input>
+This should fail validation.
+</input>
+`
+      );
+
+      // Run actual CLI validation - expect it to fail
+      let cliOutput: string;
+      let cliExitCode = 0;
+      try {
+        const result = await execAsync(`node ${CLI_PATH} validate ${genMdPath}`);
+        cliOutput = result.stdout;
+      } catch (error: unknown) {
+        const execError = error as { stdout?: string; stderr?: string; code?: number };
+        cliOutput = execError.stdout || execError.stderr || "Unknown error";
+        cliExitCode = execError.code || 1;
+      }
+
+      // Verify CLI reports errors
+      expect(cliOutput).toContain("failed");
+
       // Display validation error in browser
       await page.setContent(`
         <html>
@@ -123,6 +177,7 @@ Generate test content.
               h1 { color: #667eea; margin-bottom: 20px; }
               .file { color: #9cdcfe; }
               .error { color: #f44336; margin-left: 20px; margin-top: 10px; }
+              pre { white-space: pre-wrap; background: #1a1a1a; padding: 15px; border-radius: 4px; }
             </style>
           </head>
           <body>
@@ -130,15 +185,17 @@ Generate test content.
             <div class="result failure">
               <div class="status">
                 <span class="cross">✗</span>
-                <span class="file">/project/broken.gen.md</span>
+                <span class="file">${genMdPath}</span>
               </div>
               <div class="error">
-                ERROR: Output file does not exist: /project/missing-output.md
+                ERROR: Output file does not exist
               </div>
               <div class="error">
-                ERROR: Context file does not exist: ./missing-data.json
+                ERROR: Context file does not exist
               </div>
             </div>
+            <h2>CLI Output:</h2>
+            <pre>${cliOutput}</pre>
             <div style="margin-top: 20px; color: #f44336;">
               Results: 0 passed, 1 failed
             </div>

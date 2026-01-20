@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { createHash } from "node:crypto";
 import { GenMdParser } from "../parser/index.js";
-import { CascadingResolver } from "../resolver/index.js";
 import type { GenMdFile, CascadeOptions } from "../types/index.js";
 
 /**
@@ -77,12 +77,10 @@ export interface ValidateOptions {
  */
 export class Validator {
   private parser: GenMdParser;
-  private resolver: CascadingResolver;
   private options: Required<ValidateOptions>;
 
   constructor(options: ValidateOptions = {}) {
     this.parser = new GenMdParser();
-    this.resolver = new CascadingResolver(options.cascade);
     this.options = {
       cascade: options.cascade ?? {},
       checkOutputExists: options.checkOutputExists ?? true,
@@ -238,18 +236,11 @@ export class Validator {
   }
 
   /**
-   * Compute a simple hash of file content for comparison
+   * Compute SHA-256 hash of file content for comparison
    */
   private async computeHash(filePath: string): Promise<string> {
     const content = await fs.readFile(filePath, "utf-8");
-    // Simple hash for demonstration - in production use crypto
-    let hash = 0;
-    for (let i = 0; i < content.length; i++) {
-      const char = content.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32-bit integer
-    }
-    return hash.toString(16);
+    return createHash("sha256").update(content).digest("hex");
   }
 }
 

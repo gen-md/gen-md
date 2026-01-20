@@ -89,9 +89,11 @@
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
+    "build": "tsc -p ./",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "test": "vitest"
+    "test": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@gen-md/core": "workspace:*"
