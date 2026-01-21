@@ -9,7 +9,7 @@
     "gen-md": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r prompts dist/",
     "dev": "tsc --watch",
     "start": "node dist/index.js",
     "mcp": "node dist/mcp/server.js",

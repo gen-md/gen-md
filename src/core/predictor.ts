@@ -2,6 +2,7 @@
  * Content Predictor
  *
  * Uses Anthropic API to generate predicted content from .gen.md specs.
+ * Loads prompts from external markdown files for easy customization.
  */
 
 import Anthropic from "@anthropic-ai/sdk";
@@ -14,6 +15,7 @@ import type {
   ResolvedGenMdConfig,
 } from "../types.js";
 import { formatGitContextForPrompt } from "../git/context.js";
+import { loadPrompt, interpolate } from "./prompt-loader.js";
 
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
 const DEFAULT_MAX_TOKENS = 8192;
@@ -37,7 +39,7 @@ export class Predictor {
    * Generate predicted content from a spec
    */
   async predict(context: PredictionContext): Promise<PredictedContent> {
-    const prompt = this.buildPrompt(context);
+    const prompt = await this.buildPrompt(context);
 
     const response = await this.client.messages.create({
       model: this.options.model,
@@ -69,78 +71,74 @@ export class Predictor {
   }
 
   /**
-   * Build the prompt for the API call
+   * Build the prompt for the API call using external templates
    */
-  private buildPrompt(context: PredictionContext): string {
+  private async buildPrompt(context: PredictionContext): Promise<string> {
     const { config, gitContext, existingContent, referencedFiles } = context;
     const parts: string[] = [];
 
-    // System context
-    parts.push("You are a content generator. Generate the requested content based on the spec and context provided.");
-    parts.push("Output ONLY the generated content - no explanations, no markdown code fences, just the raw content.\n");
-
-    // Spec information
-    parts.push("# Generation Spec\n");
-
-    if (config.frontmatter.name) {
-      parts.push(`**Name:** ${config.frontmatter.name}`);
-    }
-    if (config.frontmatter.description) {
-      parts.push(`**Description:** ${config.frontmatter.description}`);
-    }
-    if (config.frontmatter.output) {
-      parts.push(`**Output File:** ${config.frontmatter.output}`);
-    }
+    // Load and add system prompt
+    const systemPrompt = await loadPrompt("system");
+    parts.push(systemPrompt);
     parts.push("");
 
-    // Referenced context files
-    if (referencedFiles.size > 0) {
-      parts.push("# Context Files\n");
-      for (const [path, content] of referencedFiles) {
-        parts.push(`## ${path}\n`);
-        parts.push("```");
-        parts.push(content);
-        parts.push("```\n");
-      }
+    // Load and add spec section
+    const specTemplate = await loadPrompt("spec-section");
+    const specContent = interpolate(specTemplate, {
+      name: config.frontmatter.name,
+      description: config.frontmatter.description,
+      output: config.frontmatter.output,
+    });
+    if (specContent.trim()) {
+      parts.push(specContent);
+      parts.push("");
     }
 
-    // Git context
+    // Add referenced context files
+    if (referencedFiles.size > 0) {
+      const contextTemplate = await loadPrompt("context-section");
+      const files = Array.from(referencedFiles.entries()).map(
+        ([path, content]) => ({ path, content })
+      );
+      const contextContent = interpolate(contextTemplate, { files });
+      parts.push(contextContent);
+    }
+
+    // Add git context
     if (gitContext) {
       parts.push(formatGitContextForPrompt(gitContext));
       parts.push("");
     }
 
-    // Existing content (if any)
+    // Add existing content (if any)
     if (existingContent) {
-      parts.push("# Current Content\n");
-      parts.push("The output file currently contains:");
-      parts.push("```");
-      parts.push(existingContent);
-      parts.push("```\n");
+      const existingTemplate = await loadPrompt("existing-content-section");
+      const existingSection = interpolate(existingTemplate, {
+        content: existingContent,
+      });
+      parts.push(existingSection);
     }
 
-    // One-shot examples
+    // Add one-shot examples
     if (config.examples.length > 0) {
-      parts.push("# Examples\n");
-      for (const example of config.examples) {
-        parts.push("<example>");
-        parts.push("Input:");
-        parts.push(example.input);
-        parts.push("---");
-        parts.push("Output:");
-        parts.push(example.output);
-        parts.push("</example>\n");
-      }
+      const examplesTemplate = await loadPrompt("examples-section");
+      const examplesContent = interpolate(examplesTemplate, {
+        examples: config.examples,
+      });
+      parts.push(examplesContent);
     }
 
-    // The actual generation instructions (body)
-    parts.push("# Generation Instructions\n");
-    parts.push(config.body);
+    // Add generation instructions (body)
+    const instructionsTemplate = await loadPrompt("instructions-section");
+    const instructionsContent = interpolate(instructionsTemplate, {
+      body: config.body,
+    });
+    parts.push(instructionsContent);
     parts.push("");
 
-    // Final instruction
-    parts.push("---");
-    parts.push("Generate the content now. Output ONLY the content, nothing else.");
+    // Add final instruction
+    const finalInstruction = await loadPrompt("final-instruction");
+    parts.push(finalInstruction);
 
     return parts.join("\n");
   }
