@@ -1,383 +1,236 @@
 # gen-md
 
-**gen-md** is a generative markdown framework that lets you define how files are generated using simple `.gen.md` prompts. It provides a consistent interface for developers to converse through their agents about their source code - .gen.md files become the ultimate spec for the codebase.
+**Gen-md is a git-like MCP for predictive version control using `.gen.md` specs.**
 
-![gen-md Landing](./tests/e2e/screenshots/gen-md-landing.png)
+Like git manages versions of files, gen-md manages **predicted versions** of files. The natural I/O is git-like operations - checkout, diff, branch, status - but operating on predicted/generated content rather than committed history.
 
-## Why gen-md
+## The Concept
 
-Stop writing code for content generation. Instead, groom and cascade in-codebase knowledge for content generation, expansion, and verification. gen-md generates any type of content in a consistent and repeatable manner, from simple markdown files to complex codebases, using natural language.
+```bash
+git checkout feature/add-auth     # Checks out existing branch
+gen-md checkout feature/add-auth  # Predicts what this branch WOULD contain
+```
 
-## Features
+The `.gen.md` files become the "specs" that define what content should exist. Gen-md predicts file contents based on:
+1. The .gen.md spec (the "what should be generated")
+2. Current codebase context (the "what exists now")
+3. Git history (the "how things evolved")
+4. Cascading inheritance (the "conventions to follow")
 
-- **File-Specific Prompts**: Each `.gen.md` file describes how to generate its corresponding file
-- **Metadata-Driven**: Use a simple metadata header to define name, description, context, and skills
-- **Context and Skills**: Reference other files or reusable skill modules to enrich the generation process
-- **Conversational Prompts**: Generate LLM-ready prompts with `--prompt` flag on all commands
-- **Git-Aware Generation**: Include git context with `--git` flag (branch, commits, files)
-- **GitHub PR Integration**: Multishot examples from merged PRs with `--from-pr` flag
-- **PR-Ready Output**: Generate PR-ready output with the `gen-md pr` command
-- **Cascading Context**: Define global `.gen.md` files in parent folders to apply common patterns
-- **Compaction**: Merge multiple `.gen.md` files into a single consolidated generator
-- **Validation**: Verify `.gen.md` files and confirm outputs exist and are aligned
+## Installation
+
+```bash
+npm install -g gen-md
+```
+
+**Requirements:**
+- Node.js >= 20.0.0
+- `ANTHROPIC_API_KEY` environment variable (for content generation)
+
+## Quick Start
+
+```bash
+# Initialize a gen-md repository
+gen-md init
+
+# Check status of .gen.md specs
+gen-md status
+
+# Create a spec for an existing file
+gen-md add README.md --description "Project documentation"
+
+# See what would be generated (preview diff)
+gen-md diff README.gen.md --dry-run
+
+# Generate the content (requires ANTHROPIC_API_KEY)
+gen-md diff README.gen.md
+
+# Stage and commit (regenerate all staged specs)
+gen-md add README.gen.md
+gen-md commit -m "Update README"
+```
+
+## Commands
+
+### `gen-md init [path]`
+Initialize a gen-md repository by creating the `.gen-md/` directory.
+
+```bash
+gen-md init
+gen-md init ./my-project
+```
+
+### `gen-md status`
+Show status of `.gen.md` specs - which need regeneration, which are up to date.
+
+```bash
+gen-md status
+gen-md status --json
+```
+
+Output shows:
+- **staged**: Specs ready for commit
+- **modified**: Specs that changed since last generation
+- **new**: Specs with missing output files
+
+### `gen-md diff <spec>`
+Show difference between current file and predicted content from spec.
+
+```bash
+# Generate prediction and show diff (calls Anthropic API)
+gen-md diff README.gen.md
+
+# Include git context in prediction
+gen-md diff README.gen.md --git
+
+# Preview without API call
+gen-md diff README.gen.md --dry-run
+
+# Use cached prediction
+gen-md diff README.gen.md --cached
+```
+
+### `gen-md add <file>`
+Create a `.gen.md` spec for an existing file, or stage an existing spec for commit.
+
+```bash
+# Create spec for existing file
+gen-md add README.md --description "Project documentation"
+
+# Stage an existing spec
+gen-md add README.gen.md
+```
+
+### `gen-md commit`
+Regenerate all staged specs and write output files.
+
+```bash
+gen-md commit -m "Update documentation"
+gen-md commit --git          # Include git context
+gen-md commit --dry-run      # Preview without writing
+```
 
 ## The `.gen.md` File Format
 
-A `.gen.md` file is a markdown file with YAML frontmatter that controls generation:
+A `.gen.md` file is a markdown file with YAML frontmatter:
 
 ```markdown
 ---
-name: "Generator Name"
-description: "What this generator produces"
-context: ["./path/to/context.file"]
-skills: ["skill-name", "./path/to/SKILL.md"]
-prompt: $prompt
-output: "output-filename.ext"
+name: "README Generator"
+description: "Generate project documentation"
+context:
+  - "./package.json"
+  - "./src/index.ts"
+output: "README.md"
 ---
 
-Generation instructions go here as plain markdown.
-The body is the prompt.
+Generate comprehensive documentation for this project.
 
-One-shot examples use <example> blocks:
-<example>
-input specification
----
-output result
-</example>
+Include:
+- Project description
+- Installation instructions
+- Usage examples
+- API documentation
 ```
 
 **Frontmatter Fields:**
 | Field | Description |
 |-------|-------------|
-| `name` | Human-readable identifier for the generator |
-| `description` | Brief explanation of what gets generated |
-| `context` | Array of file paths to include as context |
-| `skills` | Array of skill references (by name or path) |
-| `prompt` | Variable placeholder for dynamic input |
-| `output` | The target output filename |
+| `name` | Human-readable identifier |
+| `description` | What gets generated |
+| `context` | File paths to include as context |
+| `skills` | Skill references (for cascading) |
+| `output` | Target output filename |
 
-## Packages
+## The `.gen-md/` Directory
 
-### @gen-md/core
-
-Core library providing parsing, cascading resolution, compaction, validation, prompt generation, git context extraction, GitHub API integration, and PR generation.
-
-```bash
-npm install @gen-md/core
-```
-
-```typescript
-import {
-  GenMdParser,
-  CascadingResolver,
-  Compactor,
-  Validator,
-  PromptGenerator,
-  GitContextExtractor,
-  GitHubClient,
-  PRGenerator,
-  createGitExtractor,
-  createGitHubClient,
-  resolveGitHubAuth,
-} from '@gen-md/core';
-
-// Parse a .gen.md file
-const parser = new GenMdParser();
-const file = await parser.parse('./README.gen.md');
-console.log(file.body);      // The prompt content
-console.log(file.examples);  // One-shot examples
-
-// Resolve cascade chain
-const resolver = new CascadingResolver();
-const resolved = await resolver.resolve('./packages/cli/README.gen.md');
-
-// Generate conversational prompt
-const promptGen = new PromptGenerator();
-const result = await promptGen.generate('./README.gen.md');
-console.log(result.prompt);  // Ready for LLM
-
-// Extract git context
-const gitExtractor = createGitExtractor({ maxCommits: 10 });
-const gitContext = await gitExtractor.extract('./README.gen.md');
-console.log(gitContext.branch);
-console.log(gitContext.commits);
-
-// GitHub integration
-const auth = await resolveGitHubAuth();
-if (auth) {
-  const github = createGitHubClient(auth);
-  const prs = await github.getMergedPRsForFiles('owner', 'repo', ['src/index.ts']);
-}
-
-// Compact multiple files
-const compactor = new Compactor({ arrayMerge: 'dedupe' });
-const merged = await compactor.compact(['a.gen.md', 'b.gen.md']);
-
-// Validate files
-const validator = new Validator();
-const results = await validator.validateAll(['*.gen.md']);
-```
-
-### @gen-md/cli
-
-Command-line interface for gen-md operations.
-
-```bash
-npm install -g @gen-md/cli
-# or use via npx
-npx gen-md <command>
-```
-
-**Global Flags (all commands):**
-| Flag | Description |
-|------|-------------|
-| `--prompt` | Output as conversational prompt for agent consumption |
-| `--git` | Include git context (branch, recent commits) |
-
-**Commands:**
-| Command | Description |
-|---------|-------------|
-| `cascade <file>` | Preview cascade chain |
-| `validate <files...>` | Validate .gen.md files |
-| `compact <files...>` | Merge multiple .gen.md files |
-| `prompt <file>` | Generate conversational prompt |
-| `pr <file>` | Generate PR-ready output |
-
-### Extensions
-
-| Package | Platform | Status |
-|---------|----------|--------|
-| `gen-md-vscode` | VS Code | In Development |
-| `gen-md-chrome-ext` | Chrome | In Development |
-| `gen-md-claude-code-plugin` | Claude Code | In Development |
-| `gen-md-openai-custom-gpt` | ChatGPT | Planned |
-| `gen-md-antigravity` | Google IDX | Planned |
-
-## Monorepo Structure
+Gen-md maintains state in a `.gen-md/` directory (like `.git/`):
 
 ```
-gen-md/
-├── packages/
-│   ├── gen-md-core/          # Core library
-│   │   ├── src/
-│   │   │   ├── types/        # TypeScript interfaces
-│   │   │   ├── parser/       # .gen.md file parser
-│   │   │   ├── resolver/     # Cascading resolver
-│   │   │   ├── compactor/    # File merger & serializer
-│   │   │   ├── validator/    # Validation system
-│   │   │   ├── prompt/       # Prompt generator
-│   │   │   ├── git/          # Git context extractor
-│   │   │   ├── github/       # GitHub API client
-│   │   │   ├── pr/           # PR generator
-│   │   │   └── __tests__/    # Unit tests
-│   │   └── package.json
-│   ├── gen-md-cli/           # CLI package
-│   │   ├── src/
-│   │   │   ├── commands/     # CLI commands (cascade, validate, compact, prompt, pr)
-│   │   │   └── __tests__/    # Unit tests
-│   │   ├── bin/
-│   │   └── package.json
-│   ├── gen-md-vscode/        # VS Code extension
-│   ├── gen-md-chrome-ext/     # Chrome extension
-│   ├── gen-md-claude-code-plugin/ # Claude Code plugin
-│   │   ├── .claude-plugin/
-│   │   │   └── plugin.json
-│   │   ├── commands/
-│   │   ├── hooks/
-│   │   └── skills/
-│   └── ...
-├── tests/
-│   └── e2e/                  # Playwright E2E tests
-│       ├── specs/
-│       └── screenshots/
-└── .agent/
-    └── skills/
-        └── gen-md/
-            └── SKILL.md      # Generation skill
-```
-
-## Getting Started
-
-### Installation
-
-```bash
-# Install CLI globally
-npm install -g @gen-md/cli
-
-# Or use via npx (no install required)
-npx gen-md --help
-```
-
-### Quick Start
-
-```bash
-# Preview cascade chain
-npx gen-md cascade ./README.gen.md --show-merged
-
-# Validate all generators
-npx gen-md validate *.gen.md
-
-# Generate conversational prompt with git context
-npx gen-md prompt ./README.gen.md --git
-
-# Generate PR-ready output
-npx gen-md pr ./README.gen.md --json
+.gen-md/
+├── HEAD                      # Current branch
+├── config                    # Configuration
+├── index                     # Staged specs
+├── refs/heads/               # Branches
+├── objects/                  # Cached predictions
+└── logs/                     # Generation history
 ```
 
 ## Cascading Configuration
 
-Place a `.gen.md` file in any directory to define defaults that cascade to all generators in that directory and its subdirectories.
+Place a `.gen.md` file in any directory to define defaults that cascade to all generators in subdirectories:
 
 ```
 project/
-  .gen.md                    # Root config: skills: ["base"]
+  .gen.md                    # Root config
   packages/
-    .gen.md                  # Package config: skills: ["pkg-common"]
+    .gen.md                  # Package defaults
     cli/
-      app.gen.md            # Target: skills: ["cli-skill"]
+      app.gen.md            # Inherits from both
 ```
-
-When resolving `app.gen.md`, the cascade chain merges configurations:
-
-![Cascade Visualization](./tests/e2e/screenshots/gen-md-cascade.png)
 
 **Merge Rules:**
 - Scalar values: child overrides parent
 - Arrays (context, skills): concatenate and deduplicate
 - Body: append child to parent
 
-Preview a cascade chain:
-```bash
-npx gen-md cascade ./packages/cli/app.gen.md --show-merged --prompt
-```
+## MCP Server
 
-## Compaction
-
-Merge multiple `.gen.md` files into a single consolidated file:
+Gen-md includes an MCP server for AI agent integration:
 
 ```bash
-npx gen-md compact file1.gen.md file2.gen.md -o merged.gen.md
+# Start the MCP server
+gen-md mcp
 ```
 
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `-o, --output <file>` | Output file path (default: merged.gen.md) |
-| `--array-merge <strategy>` | concatenate, dedupe, replace (default: dedupe) |
-| `--body-merge <strategy>` | append, prepend, replace (default: append) |
-| `--resolve-paths` | Convert relative paths to absolute |
-| `--dry-run` | Preview output without writing |
-| `--prompt` | Output as conversational prompt |
-| `--git` | Include git context |
+**Available Tools:**
+- `gen_md_init` - Initialize repository
+- `gen_md_status` - Show spec status
+- `gen_md_diff` - Show predicted diff
+- `gen_md_add` - Create/stage specs
+- `gen_md_commit` - Regenerate and write
 
-## Validation
+Configure in your MCP client:
+```json
+{
+  "mcpServers": {
+    "gen-md": {
+      "command": "gen-md",
+      "args": ["mcp"]
+    }
+  }
+}
+```
 
-Validate `.gen.md` files to ensure outputs exist and references are valid:
+## Example Workflow
 
 ```bash
-npx gen-md validate *.gen.md --prompt
+# Initialize
+gen-md init
+
+# Create a spec for your README
+gen-md add README.md --description "Project documentation"
+
+# Edit the generated spec to add more instructions
+# (the .gen.md file was created)
+
+# Preview what would be generated
+gen-md diff README.gen.md --dry-run
+
+# Generate the content
+gen-md diff README.gen.md
+
+# Commit the generation
+gen-md add README.gen.md
+gen-md commit -m "Generate initial README"
 ```
 
-![Validation Output](./tests/e2e/screenshots/gen-md-validate.png)
+## Environment Variables
 
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `--no-check-output` | Skip checking if output files exist |
-| `--no-check-context` | Skip checking if context files exist |
-| `--no-check-skills` | Skip checking if skill files exist |
-| `--json` | Output results as JSON |
-| `--prompt` | Output as conversational prompt |
-| `--git` | Include git context |
-
-## Prompt Generation
-
-Generate conversational prompts with one-shot examples:
-
-```bash
-npx gen-md prompt ./README.gen.md --git
-```
-
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `-o, --output <file>` | Write prompt to file |
-| `--no-current-code` | Don't include current output content |
-| `--user-prompt <text>` | Override the user prompt |
-| `--examples-merge <strategy>` | concatenate, prepend, replace, dedupe |
-| `--git` | Include git context |
-| `--from-pr <n>` | Include PR #n as multishot example |
-| `--max-pr-examples <n>` | Max number of PR examples |
-| `--json` | Output as JSON structure |
-
-## PR Generation
-
-Generate PR-ready output from a `.gen.md` file:
-
-```bash
-npx gen-md pr ./README.gen.md --json
-```
-
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `--title <title>` | Override PR title |
-| `--base <branch>` | Target branch (default: main) |
-| `--from-pr <n>` | Include PR #n as multishot example |
-| `--max-pr-examples <n>` | Max number of PR examples |
-| `--create` | Create the PR using gh CLI |
-| `--json` | Output as JSON |
-
-## GitHub Authentication
-
-For PR integration, authentication is resolved in order:
-1. `GITHUB_TOKEN` environment variable
-2. `GH_TOKEN` environment variable
-3. `gh auth token` command (if gh CLI is installed)
-
-## Testing
-
-### Unit Tests
-
-```bash
-# Run all unit tests
-npm run test
-
-# Run core library tests
-cd packages/gen-md-core && npm test
-
-# Run CLI tests
-cd packages/gen-md-cli && npm test
-```
-
-### E2E Tests
-
-```bash
-# Run Playwright E2E tests
-npm run test:e2e
-
-# Run with UI
-npm run test:e2e -- --ui
-
-# Run headed (visible browser)
-npm run test:e2e -- --headed
-```
-
-## Platform Support
-
-**AI Assistants** (desktop/mobile):
-- ChatGPT, Claude, Gemini
-
-**IDE Extensions**:
-- VS Code, Google IDX, Claude Code, Cursor, Windsurf
-
-**Browser Extensions**:
-- Chrome, Firefox, Safari
-
-## Contributing
-
-Contributions are welcome! Please read our contributing guidelines before submitting PRs.
+| Variable | Description |
+|----------|-------------|
+| `ANTHROPIC_API_KEY` | Required for content generation |
 
 ## License
 
-This project is licensed under the MIT License.
+MIT

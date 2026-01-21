@@ -47,6 +47,9 @@ test-results/
 *.temp
 .cache/
 
+# Gen-md state directory
+.gen-md/
+
 # VS Code Extension
 *.vsix
 
