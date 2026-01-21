@@ -12,6 +12,8 @@ Predictive git.
 npm install -g gitgen && export ANTHROPIC_API_KEY=sk-...
 ```
 
+Git automatically discovers `git-gen` in PATH and runs it as `git gen`.
+
 ## Quick Start
 
 ```bash
@@ -50,6 +52,15 @@ README.md               README.gitgen.md         feature/dark-mode
 | `git gen diff .` | Preview changes without writing |
 | `git gen init <file>` | Create spec from file + git history |
 | `git gen branch <feature>` | Create branch with implementation |
+
+### Branch Options
+
+```bash
+git gen branch "add dark mode"              # LLM picks branch name
+git gen branch -n feature/auth "add auth"   # Specify branch name
+git gen branch --dry-run "add dark mode"    # Preview plan only
+git gen branch --no-checkout "add feature"  # Create branch, stay on current
+```
 
 ## Spec Format
 

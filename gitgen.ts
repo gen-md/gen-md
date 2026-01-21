@@ -25,6 +25,12 @@ interface ParsedSpec {
   filePath: string;
 }
 
+interface BranchOptions {
+  name?: string;
+  dryRun?: boolean;
+  noCheckout?: boolean;
+}
+
 // === CONFIG ===
 
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
@@ -188,7 +194,10 @@ async function generateSpec(filePath: string): Promise<string> {
   return llm(prompt);
 }
 
-async function generateBranch(feature: string): Promise<string[]> {
+async function generateBranch(
+  feature: string,
+  options: BranchOptions = {}
+): Promise<string[]> {
   const planTemplate = await loadPrompt("branch-plan");
   const fileTemplate = await loadPrompt("branch-file");
 
@@ -212,16 +221,30 @@ async function generateBranch(feature: string): Promise<string[]> {
     files: Array<{ path: string; action: string; description: string }>;
   };
 
+  // Use provided name or LLM-derived name
+  const branchName = options.name || plan.branch;
+
+  // Dry run: show plan and exit
+  if (options.dryRun) {
+    console.log(`→ Branch: ${branchName}`);
+    console.log(`→ Files to generate:`);
+    for (const file of plan.files) {
+      console.log(`  ${file.action === "modify" ? "~" : "+"} ${file.path}`);
+      console.log(`    ${file.description}`);
+    }
+    return [];
+  }
+
   // Create branch
-  git(`checkout -b ${plan.branch}`);
-  console.log(`→ Branch: ${plan.branch}`);
+  const currentBranch = git("branch --show-current");
+  git(`checkout -b ${branchName}`);
+  console.log(`→ Branch: ${branchName}`);
   console.log(`→ Generating files...`);
 
   const createdFiles: string[] = [];
 
   // Generate each file
   for (const file of plan.files) {
-
     let existing = "";
     if (file.action === "modify" && existsSync(file.path)) {
       existing = await readFile(file.path, "utf-8");
@@ -245,6 +268,12 @@ async function generateBranch(feature: string): Promise<string[]> {
     await writeFile(file.path, fileContent, "utf-8");
     createdFiles.push(file.path);
     console.log(`  + ${file.path}`);
+  }
+
+  // Return to original branch if --no-checkout
+  if (options.noCheckout && currentBranch) {
+    git(`checkout ${currentBranch}`);
+    console.log(`→ Returned to: ${currentBranch}`);
   }
 
   return createdFiles;
@@ -310,13 +339,23 @@ Usage:
   git gen <spec.gitgen.md>       Generate from specific spec file
   git gen diff <dir|spec>        Preview generated content
   git gen init <file>            Create .gitgen.md spec from existing file
-  git gen branch <feature>       Create branch with feature implementation
+  git gen branch [options] <feature>
+                                 Create branch with feature implementation
   git gen --help                 Show this help
+
+Branch options:
+  -n, --name <name>              Specify branch name (default: LLM derives)
+  --dry-run                      Show plan without creating branch/files
+  --no-checkout                  Create branch but stay on current branch
 
 Examples:
   git gen .                      Generate from ./.gitgen.md
   git gen init README.md         Create README.gitgen.md from README.md
   git gen branch "add dark mode" Create feature branch with implementation
+  git gen branch --dry-run "add auth"
+                                 Preview implementation plan
+  git gen branch -n feature/auth "add JWT authentication"
+                                 Specify branch name
 
 Environment:
   ANTHROPIC_API_KEY  Required for generation
@@ -352,15 +391,43 @@ async function main(): Promise<void> {
       await writeFile(specPath, spec, "utf-8");
       console.log(`✓ Wrote ${specPath}`);
     } else if (command === "branch") {
-      const feature = args.slice(1).join(" ");
+      // Parse options
+      let branchName: string | undefined;
+      let dryRun = false;
+      let noCheckout = false;
+      const featureParts: string[] = [];
+
+      for (let i = 1; i < args.length; i++) {
+        const arg = args[i];
+        if (arg === "-n" || arg === "--name") {
+          branchName = args[++i];
+        } else if (arg === "--dry-run") {
+          dryRun = true;
+        } else if (arg === "--no-checkout") {
+          noCheckout = true;
+        } else if (!arg.startsWith("-")) {
+          featureParts.push(arg);
+        }
+      }
+
+      const feature = featureParts.join(" ");
       if (!feature) {
         console.error("Error: No feature description provided");
         process.exit(1);
       }
 
       console.log(`→ Planning: ${feature}`);
-      const files = await generateBranch(feature);
-      console.log(`\n✓ Created ${files.length} files`);
+      const files = await generateBranch(feature, {
+        name: branchName,
+        dryRun,
+        noCheckout,
+      });
+
+      if (dryRun) {
+        console.log(`\n(dry run - no changes made)`);
+      } else {
+        console.log(`\n✓ Created ${files.length} files`);
+      }
     } else if (command === "diff") {
       const pathArg = args[1];
       if (!pathArg) {

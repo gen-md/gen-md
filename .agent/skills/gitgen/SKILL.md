@@ -51,6 +51,33 @@ $ git gen branch "add dark mode"
 ✓ Created 3 files
 ```
 
+### Branch Options
+
+```bash
+git gen branch "add dark mode"              # LLM picks branch name
+git gen branch -n feature/auth "add auth"   # Specify branch name
+git gen branch --dry-run "add dark mode"    # Preview plan only
+git gen branch --no-checkout "add feature"  # Create branch, stay on current
+```
+
+### Dry Run Example
+
+```bash
+$ git gen branch --dry-run "add user authentication"
+
+→ Planning: add user authentication
+→ Branch: feature/user-auth
+→ Files to generate:
+  + src/middleware/auth.ts
+    JWT authentication middleware
+  + src/routes/auth.ts
+    Login and registration endpoints
+  + src/utils/password.ts
+    Password hashing utilities
+
+(dry run - no changes made)
+```
+
 ## Spec Format
 
 A `.gitgen.md` file has YAML frontmatter + markdown body:
