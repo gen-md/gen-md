@@ -1,19 +1,5 @@
 # Dependencies
 node_modules/
-.pnpm-store/
-
-# Build outputs
-dist/
-build/
-out/
-*.js.map
-
-# TypeScript
-*.tsbuildinfo
-
-# Test coverage
-coverage/
-.nyc_output/
 
 # IDE
 .idea/
@@ -24,35 +10,8 @@ coverage/
 
 # Logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # Environment
 .env
 .env.local
 .env.*.local
-
-# Package manager locks (keep package-lock.json)
-yarn.lock
-pnpm-lock.yaml
-
-# Playwright
-.playwright-mcp/
-playwright-report/
-test-results/
-
-# Temporary files
-*.tmp
-*.temp
-.cache/
-
-# Gen-md state directory
-.gen-md/
-
-# VS Code Extension
-*.vsix
-
-# Chrome Extension
-*.crx
-*.pem

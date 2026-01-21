@@ -59,13 +59,7 @@ gitgen --help                 # Show help
 
 ## Examples
 
-See [examples/](examples/) for complete examples:
-- **01-basic**: Simple README generation
-- **02-cascade**: Multi-level inheritance
-- **03-documentation**: API docs from source
-- **04-infrastructure**: Dockerfile and CI/CD
-- **05-content**: Blog posts and release notes
-- **06-monorepo**: Full monorepo setup
+See [examples/](examples/) for a complete example.
 
 ## Philosophy
 
