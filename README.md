@@ -1,20 +1,6 @@
 # git gen
 
-Predictive git.
-
-```
-┌──────────────────────────────────────────────────────────────┐
-│  git manages what IS.     git gen explores EVERYTHING ELSE.  │
-└──────────────────────────────────────────────────────────────┘
-```
-
-```bash
-npm install -g gitgen && export ANTHROPIC_API_KEY=sk-...
-```
-
-Git automatically discovers `git-gen` in PATH and runs it as `git gen`.
-
-## Quick Start
+Generative git.
 
 ```bash
 $ git gen -b feature/dark-mode "add dark mode"
@@ -27,6 +13,10 @@ $ git gen -b feature/dark-mode "add dark mode"
   + src/components/ThemeToggle.tsx
 
 ✓ Created 3 files
+```
+
+```bash
+npm install -g gitgen && export ANTHROPIC_API_KEY=sk-...
 ```
 
 ## Commands
