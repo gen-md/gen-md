@@ -1,0 +1,7 @@
+Available Providers
+
+○ anthropic    (claude-opus-4-20250514, claude-sonnet-4-20250514, claude-3-5-haiku-20241022...)
+○ openai       (gpt-4o, gpt-4o-mini, gpt-4-turbo...)
+✓ ollama       (llama3, llama3:70b, llama2...)
+
+✓ = configured, ○ = needs API key

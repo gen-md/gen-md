@@ -1,0 +1,17 @@
+{
+  "name": "my-awesome-lib",
+  "version": "1.0.0",
+  "description": "A utility library for common operations",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest"
+  },
+  "keywords": ["utility", "helpers"],
+  "author": "Example Author",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "vitest": "^1.0.0"
+  }
+}

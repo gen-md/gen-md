@@ -1,0 +1,40 @@
+Cascade Chain
+
+├── ../../.gitgen.md
+│    frontmatter: name, description, skills, context, output
+│    body: Generate a README.md for gitgen.
+│    examples: 1
+
+├── .gitgen.md
+│    frontmatter: model, context, skills
+│    body: All documentation follows Acme Corp standards.
+
+├── packages/.gitgen.md
+│    frontmatter: context, skills
+│    body: Package documentation includes API reference section.
+
+└── packages/api/README.gitgen.md
+     frontmatter: output, context
+     body: Generate API package documentation with:
+
+Resolved Configuration
+
+  name: gitgen
+  description: Generate README.md for gitgen CLI
+  output: /Users/giladkhen/Documents/hq/projects/gen-md/examples/02-cascade/packages/api/README.md
+  context:
+    - /Users/giladkhen/Documents/hq/projects/gen-md/package.json
+    - /Users/giladkhen/Documents/hq/projects/gen-md/src/index.ts
+    - /Users/giladkhen/Documents/hq/projects/gen-md/src/mcp/server.ts
+    - /Users/giladkhen/Documents/hq/projects/gen-md/src/core/extensions.ts
+    - /Users/giladkhen/Documents/hq/projects/gen-md/src/core/prompt-loader.ts
+    - /Users/giladkhen/Documents/hq/projects/gen-md/src/core/predictor.ts
+    - /Users/giladkhen/Documents/hq/projects/gen-md/examples/02-cascade/package.json
+    - /Users/giladkhen/Documents/hq/projects/gen-md/examples/02-cascade/packages/shared/types.ts
+    - /Users/giladkhen/Documents/hq/projects/gen-md/examples/02-cascade/packages/api/src/index.ts
+  skills:
+    - /Users/giladkhen/Documents/hq/projects/gen-md/.agent/skills/gen-md/SKILL.md
+    - /Users/giladkhen/Documents/hq/projects/gen-md/examples/02-cascade/.gitgen/skills/company-style.md
+    - /Users/giladkhen/Documents/hq/projects/gen-md/examples/02-cascade/.gitgen/skills/api-docs.md
+  examples: 1
+  body: 75 words

@@ -1,0 +1,16 @@
+{
+  "name": "@acme/cli",
+  "version": "1.0.0",
+  "description": "Command-line interface for Acme Platform",
+  "bin": {
+    "acme": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@acme/core": "workspace:*",
+    "commander": "^12.0.0"
+  }
+}

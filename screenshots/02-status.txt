@@ -1,0 +1,17 @@
+On branch: main
+
+Specs with missing outputs:
+  (use "gitgen add <spec>" to stage for generation)
+
+        new:      examples/01-basic/README.gitgen.md -> examples/01-basic/README.md
+        new:      examples/02-cascade/packages/api/README.gitgen.md -> examples/02-cascade/packages/api/README.md
+        new:      examples/03-documentation/api-reference.gitgen.md -> examples/03-documentation/docs/api.md
+        new:      examples/03-documentation/changelog.gitgen.md -> examples/03-documentation/CHANGELOG.md
+        new:      examples/04-infrastructure/Dockerfile.gitgen.md -> examples/04-infrastructure/Dockerfile
+        new:      examples/04-infrastructure/ci.gitgen.md -> examples/04-infrastructure/.github/workflows/ci.yml
+        new:      examples/05-content/blog-post.gitgen.md -> examples/05-content/content/blog/announcing-v2.md
+        new:      examples/05-content/release-notes.gitgen.md -> examples/05-content/releases/v2.0.0.md
+        new:      examples/06-monorepo/packages/cli/README.gitgen.md -> examples/06-monorepo/packages/cli/README.md
+        new:      examples/06-monorepo/packages/core/README.gitgen.md -> examples/06-monorepo/packages/core/README.md
+        new:      examples/06-monorepo/packages/web/README.gitgen.md -> examples/06-monorepo/packages/web/README.md
+
