@@ -4,7 +4,7 @@
   "description": "Predictive git. Generate specs from git history, and generate new branches for feature implementations.",
   "type": "module",
   "bin": {
-    "gitgen": "./gitgen.ts"
+    "git-gen": "./gitgen.ts"
   },
   "scripts": {
     "start": "npx tsx gitgen.ts"

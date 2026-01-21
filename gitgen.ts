@@ -302,21 +302,21 @@ function resolveSpecPath(pathArg: string): string {
 // === CLI ===
 
 function printUsage(): void {
-  console.log(`gitgen - Predictive git
+  console.log(`git gen - Predictive git
 
 Usage:
-  gitgen .                      Generate from .gitgen.md in current directory
-  gitgen <dir>                  Generate from .gitgen.md in directory
-  gitgen <spec.gitgen.md>       Generate from specific spec file
-  gitgen diff <dir|spec>        Preview generated content
-  gitgen init <file>            Create .gitgen.md spec from existing file
-  gitgen branch <feature>       Create branch with feature implementation
-  gitgen --help                 Show this help
+  git gen .                      Generate from .gitgen.md in current directory
+  git gen <dir>                  Generate from .gitgen.md in directory
+  git gen <spec.gitgen.md>       Generate from specific spec file
+  git gen diff <dir|spec>        Preview generated content
+  git gen init <file>            Create .gitgen.md spec from existing file
+  git gen branch <feature>       Create branch with feature implementation
+  git gen --help                 Show this help
 
 Examples:
-  gitgen .                      Generate from ./.gitgen.md
-  gitgen init README.md         Create README.gitgen.md from README.md
-  gitgen branch "add dark mode" Create feature branch with implementation
+  git gen .                      Generate from ./.gitgen.md
+  git gen init README.md         Create README.gitgen.md from README.md
+  git gen branch "add dark mode" Create feature branch with implementation
 
 Environment:
   ANTHROPIC_API_KEY  Required for generation

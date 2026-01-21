@@ -1,10 +1,10 @@
-# gitgen
+# git gen
 
 Predictive git.
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  git manages what IS.     gitgen explores EVERYTHING ELSE.   │
+│  git manages what IS.     git gen explores EVERYTHING ELSE.  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -15,7 +15,7 @@ npm install -g gitgen && export ANTHROPIC_API_KEY=sk-...
 ## Quick Start
 
 ```bash
-$ gitgen branch "add dark mode"
+$ git gen branch "add dark mode"
 
 → Planning: add dark mode
 → Branch: feature/dark-mode
@@ -35,7 +35,7 @@ SPEC → FILE              FILE → SPEC              FEATURE → BRANCH
 .gitgen.md               README.md                "add dark mode"
     │                        │                          │
     ▼                        ▼                          ▼
- gitgen .                gitgen init              gitgen branch
+ git gen .              git gen init             git gen branch
     │                        │                          │
     ▼                        ▼                          ▼
 README.md               README.gitgen.md         feature/dark-mode
@@ -46,10 +46,10 @@ README.md               README.gitgen.md         feature/dark-mode
 
 | Command | Description |
 |---------|-------------|
-| `gitgen .` | Generate from `.gitgen.md` in current directory |
-| `gitgen diff .` | Preview changes without writing |
-| `gitgen init <file>` | Create spec from file + git history |
-| `gitgen branch <feature>` | Create branch with implementation |
+| `git gen .` | Generate from `.gitgen.md` in current directory |
+| `git gen diff .` | Preview changes without writing |
+| `git gen init <file>` | Create spec from file + git history |
+| `git gen branch <feature>` | Create branch with implementation |
 
 ## Spec Format
 

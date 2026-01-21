@@ -1,4 +1,4 @@
-# gitgen
+# git gen
 
 Predictive git. Generate specs from git history, and generate new branches for feature implementations.
 
@@ -6,7 +6,7 @@ Predictive git. Generate specs from git history, and generate new branches for f
 
 ```
 ┌──────────────────────────────────────────────────────────────┐
-│  git manages what IS.     gitgen explores EVERYTHING ELSE.   │
+│  git manages what IS.     git gen explores EVERYTHING ELSE.  │
 └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -14,36 +14,32 @@ Predictive git. Generate specs from git history, and generate new branches for f
 
 ```
 SPEC → FILE              FILE → SPEC              FEATURE → BRANCH
-───────────              ───────────              ─────────────────
 
 .gitgen.md               README.md                "add dark mode"
     │                        │                          │
     ▼                        ▼                          ▼
-┌───────┐               ┌────────┐                ┌──────────┐
-│gitgen │               │ gitgen │                │  gitgen  │
-│   .   │               │  init  │                │  branch  │
-└───────┘               └────────┘                └──────────┘
+ git gen .              git gen init             git gen branch
     │                        │                          │
     ▼                        ▼                          ▼
-README.md               .gitgen.md               feature/dark-mode
+README.md               README.gitgen.md         feature/dark-mode
                                                  + generated files
 ```
 
 ## Commands
 
 ```bash
-gitgen .                      # Generate from .gitgen.md in current directory
-gitgen <dir>                  # Generate from .gitgen.md in directory
-gitgen <spec.gitgen.md>       # Generate from specific spec file
-gitgen diff <dir|spec>        # Preview changes without writing
-gitgen init <file>            # Create .gitgen.md spec from existing file
-gitgen branch <feature>       # Create branch with feature implementation
+git gen .                      # Generate from .gitgen.md in current directory
+git gen <dir>                  # Generate from .gitgen.md in directory
+git gen <spec.gitgen.md>       # Generate from specific spec file
+git gen diff <dir|spec>        # Preview changes without writing
+git gen init <file>            # Create .gitgen.md spec from existing file
+git gen branch <feature>       # Create branch with feature implementation
 ```
 
 ## Example: Adding Dark Mode
 
 ```bash
-$ gitgen branch "add dark mode"
+$ git gen branch "add dark mode"
 
 → Planning: add dark mode
 → Branch: feature/dark-mode
@@ -51,9 +47,8 @@ $ gitgen branch "add dark mode"
   + src/contexts/ThemeContext.tsx
   + src/hooks/useTheme.ts
   + src/components/ThemeToggle.tsx
-  + src/styles/themes.css
 
-✓ Created 4 files
+✓ Created 3 files
 ```
 
 ## Spec Format
@@ -88,7 +83,7 @@ Generate a README with:
 ### Generate from spec
 
 ```bash
-$ gitgen .
+$ git gen .
 
 → Generating: README.md
 ✓ Wrote README.md
@@ -97,7 +92,7 @@ $ gitgen .
 ### Create spec from existing file
 
 ```bash
-$ gitgen init README.md
+$ git gen init README.md
 
 → Analyzing: README.md
 → Reading git history...
@@ -112,7 +107,7 @@ The `init` command:
 ### Preview before generating
 
 ```bash
-$ gitgen diff .
+$ git gen diff .
 
 → Generating: README.md
 --- README.md (current)
