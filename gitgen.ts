@@ -276,6 +276,29 @@ async function generateSpec(filePath: string): Promise<string> {
   return llm(prompt);
 }
 
+function getRecentDiffs(limit = 5): string {
+  const log = git(`log -${limit} --pretty=format:"%h"`);
+  if (!log) return "";
+
+  const hashes = log.split("\n").filter(Boolean);
+  const diffs: string[] = [];
+
+  for (const hash of hashes) {
+    // Get commit message and diff (limited to avoid token explosion)
+    const subject = git(`log -1 --pretty=format:"%s" ${hash}`);
+    const diff = git(`show ${hash} --stat --patch -U2`);
+    if (diff) {
+      // Truncate large diffs
+      const truncated = diff.length > 3000
+        ? diff.slice(0, 3000) + "\n... (truncated)"
+        : diff;
+      diffs.push(`<commit hash="${hash}" subject="${subject}">\n${truncated}\n</commit>`);
+    }
+  }
+
+  return diffs.join("\n\n");
+}
+
 async function generateFeature(
   feature: string,
   options: GenOptions = {}
@@ -284,6 +307,7 @@ async function generateFeature(
   const fileTemplate = await loadPrompt("branch-file");
 
   const recentCommits = git("log -20 --pretty=format:'%h %s'");
+  const recentDiffs = getRecentDiffs(5);
   const allFiles = git("ls-files").split("\n").filter(Boolean);
   const fileList = allFiles.slice(0, 100).join("\n");
 
@@ -294,6 +318,7 @@ async function generateFeature(
   const planPrompt = renderPrompt(planTemplate, {
     feature,
     recentCommits,
+    recentDiffs,
     files: fileList,
     projectContext,
   });
