@@ -6,6 +6,16 @@ Generative git.
 npm install -g gitgen && export ANTHROPIC_API_KEY=sk-...
 ```
 
+Uses git's [extension mechanism](https://git-scm.com/docs/git#_git_commands) — installing adds `git-gen` to PATH, which git discovers as `git gen`.
+
+## Why git?
+
+Git history is an implicit style guide. Recent commits show naming conventions, file organization, error patterns. The file tree reveals architecture — where routes go, where utils live. Related files in the same directory show local patterns.
+
+Generation reads this context: `git log` for patterns, `git ls-files` for structure, sibling files for style. New code matches *your* codebase, not generic examples.
+
+The workflow stays familiar: branch → generate → review → commit → push.
+
 ## Example
 
 ```bash
