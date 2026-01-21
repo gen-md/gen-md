@@ -89,11 +89,25 @@ test.describe("Web Demo", () => {
               <div class="features">
                 <div class="feature">
                   <h3>Cascading</h3>
-                  <p>Inherit configurations from parent directories</p>
+                  <p>Inherit configs from parent directories</p>
+                </div>
+                <div class="feature">
+                  <h3>Conversational</h3>
+                  <p>--prompt flag for agent consumption</p>
+                </div>
+                <div class="feature">
+                  <h3>Git-Aware</h3>
+                  <p>Include git context with --git flag</p>
+                </div>
+              </div>
+              <div class="features" style="margin-top: 20px;">
+                <div class="feature">
+                  <h3>PR Integration</h3>
+                  <p>Multishot examples from merged PRs</p>
                 </div>
                 <div class="feature">
                   <h3>Compaction</h3>
-                  <p>Merge multiple .gen.md files into one</p>
+                  <p>Merge multiple .gen.md files</p>
                 </div>
                 <div class="feature">
                   <h3>Validation</h3>
@@ -337,7 +351,7 @@ generate('input.gen.md');</code></pre>
             </style>
           </head>
           <body>
-            <h1>Cascade Chain Visualization</h1>
+            <h1>gen-md cascade ./packages/cli/README.gen.md --prompt --git</h1>
             <div class="cascade">
               <div class="node">
                 <div class="node-path">/project/.gen.md</div>
@@ -352,7 +366,7 @@ generate('input.gen.md');</code></pre>
               <div class="node">
                 <div class="node-path">/project/packages/cli/README.gen.md</div>
                 <div class="node-name">CLI README Generator</div>
-                <div class="node-skills">skills: ["cli-readme"]</div>
+                <div class="node-skills">skills: ["cli-readme"], output: "README.md"</div>
               </div>
             </div>
             <div class="cascade">
@@ -360,6 +374,9 @@ generate('input.gen.md');</code></pre>
                 <h2>Merged Configuration</h2>
                 <div class="merged-item">skills: ["base-skill", "pkg-documentation", "cli-readme"]</div>
                 <div class="merged-item">output: "README.md"</div>
+                <div class="merged-item" style="margin-top: 15px; color: #9f7aea;">Git Context:</div>
+                <div class="merged-item">branch: main</div>
+                <div class="merged-item">commits: 5 recent</div>
               </div>
             </div>
           </body>
