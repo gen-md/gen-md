@@ -5,8 +5,8 @@
  * Checks for common issues like missing context files, invalid frontmatter, etc.
  */
 
-import { access, constants, readFile, stat } from "node:fs/promises";
-import { resolve, relative, dirname } from "node:path";
+import { access, constants, stat } from "node:fs/promises";
+import { resolve, relative } from "node:path";
 import chalk from "chalk";
 import { createParser } from "../core/parser.js";
 import { createResolver } from "../core/resolver.js";

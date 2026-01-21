@@ -5,7 +5,7 @@
  * Like `git init`.
  */
 
-import { resolve, relative } from "node:path";
+import { resolve } from "node:path";
 import chalk from "chalk";
 import { createStore } from "../core/store.js";
 

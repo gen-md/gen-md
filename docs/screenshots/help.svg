@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 420">
+  <style>
+    .bg { fill: #1e1e1e; }
+    .title-bar { fill: #323232; }
+    .btn { fill: #ff5f56; }
+    .btn-yellow { fill: #ffbd2e; }
+    .btn-green { fill: #27c93f; }
+    .text { font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 13px; fill: #d4d4d4; }
+    .prompt { fill: #569cd6; }
+    .command { fill: #4ec9b0; }
+    .heading { fill: #dcdcaa; }
+    .option { fill: #9cdcfe; }
+    .desc { fill: #ce9178; }
+  </style>
+
+  <!-- Window background -->
+  <rect class="bg" width="800" height="420" rx="8"/>
+
+  <!-- Title bar -->
+  <rect class="title-bar" width="800" height="32" rx="8"/>
+  <rect class="title-bar" y="24" width="800" height="8"/>
+
+  <!-- Window buttons -->
+  <circle class="btn" cx="20" cy="16" r="6"/>
+  <circle class="btn-yellow" cx="40" cy="16" r="6"/>
+  <circle class="btn-green" cx="60" cy="16" r="6"/>
+
+  <!-- Title -->
+  <text x="400" y="20" text-anchor="middle" class="text" style="font-size: 12px;">Terminal — gitgen --help</text>
+
+  <!-- Terminal content -->
+  <text x="20" y="60" class="text">
+    <tspan class="prompt">$</tspan>
+    <tspan class="command"> gitgen --help</tspan>
+  </text>
+
+  <text x="20" y="90" class="text">Usage: <tspan class="command">gitgen</tspan> [options] [command]</text>
+
+  <text x="20" y="120" class="desc">Git-like MCP for predictive version control using .gitgen.md specs</text>
+
+  <text x="20" y="155" class="heading">Options:</text>
+  <text x="20" y="175" class="text">
+    <tspan class="option">  -V, --version</tspan>
+    <tspan x="260">output the version number</tspan>
+  </text>
+  <text x="20" y="195" class="text">
+    <tspan class="option">  -h, --help</tspan>
+    <tspan x="260">display help for command</tspan>
+  </text>
+
+  <text x="20" y="230" class="heading">Commands:</text>
+  <text x="20" y="250" class="text">
+    <tspan class="option">  init [path]</tspan>
+    <tspan x="260">Initialize a gitgen repository</tspan>
+  </text>
+  <text x="20" y="270" class="text">
+    <tspan class="option">  status [options]</tspan>
+    <tspan x="260">Show status of .gitgen.md specs</tspan>
+  </text>
+  <text x="20" y="290" class="text">
+    <tspan class="option">  diff [options] &lt;spec&gt;</tspan>
+    <tspan x="260">Show predicted content diff</tspan>
+  </text>
+  <text x="20" y="310" class="text">
+    <tspan class="option">  add [options] &lt;file&gt;</tspan>
+    <tspan x="260">Create or stage a spec</tspan>
+  </text>
+  <text x="20" y="330" class="text">
+    <tspan class="option">  commit [options]</tspan>
+    <tspan x="260">Regenerate staged specs</tspan>
+  </text>
+  <text x="20" y="350" class="text">
+    <tspan class="option">  watch [options]</tspan>
+    <tspan x="260">Auto-regenerate on changes</tspan>
+  </text>
+  <text x="20" y="370" class="text">
+    <tspan class="option">  cascade [options] &lt;spec&gt;</tspan>
+    <tspan x="260">Show inheritance chain</tspan>
+  </text>
+  <text x="20" y="390" class="text">
+    <tspan class="option">  validate [options] [path]</tspan>
+    <tspan x="260">Validate specs without API</tspan>
+  </text>
+</svg>

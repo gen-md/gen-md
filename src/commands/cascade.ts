@@ -9,7 +9,6 @@ import { resolve, relative, dirname } from "node:path";
 import chalk from "chalk";
 import { createResolver } from "../core/resolver.js";
 import { findGenMdRoot } from "../core/store.js";
-import type { GenMdFile, ResolvedGenMdConfig } from "../types.js";
 
 /**
  * Options for cascade command
@@ -93,7 +92,7 @@ export async function cascadeCommand(options: CascadeOptions): Promise<CascadeRe
 /**
  * Format cascade result for display
  */
-export function formatCascade(result: CascadeResult, colored = true): string {
+export function formatCascade(result: CascadeResult, _colored = true): string {
   const lines: string[] = [];
 
   // Header

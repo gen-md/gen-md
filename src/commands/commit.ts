@@ -5,10 +5,10 @@
  * Like `git commit`.
  */
 
-import { writeFile, readFile } from "node:fs/promises";
-import { dirname, relative, resolve } from "node:path";
+import { writeFile } from "node:fs/promises";
+import { relative } from "node:path";
 import chalk from "chalk";
-import { createParser } from "../core/parser.js";
+import { createParser as _createParser } from "../core/parser.js";
 import { createResolver } from "../core/resolver.js";
 import { createStore, findGenMdRoot } from "../core/store.js";
 import { createPredictor, buildPredictionContext } from "../core/predictor.js";
@@ -44,7 +44,7 @@ export async function commitCommand(
   }
 
   const store = createStore(root);
-  const parser = createParser();
+  const _parser = _createParser();
   const resolver = createResolver();
   const predictor = createPredictor();
 

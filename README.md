@@ -1,8 +1,16 @@
 # gitgen
 
+[![CI](https://github.com/gitgen/gitgen/actions/workflows/ci.yml/badge.svg)](https://github.com/gitgen/gitgen/actions/workflows/ci.yml)
+[![npm version](https://badge.fury.io/js/gitgen.svg)](https://www.npmjs.com/package/gitgen)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 **GitGen is a git-like MCP for predictive version control using `.gitgen.md` specs.**
 
 Like git manages versions of files, gitgen manages **predicted versions** of files. The natural I/O is git-like operations - checkout, diff, branch, status - but operating on predicted/generated content rather than committed history.
+
+<p align="center">
+  <img src="./docs/screenshots/status.svg" alt="gitgen status" width="700">
+</p>
 
 ## The Concept
 
@@ -51,6 +59,17 @@ gitgen commit -m "Update README"
 ```
 
 ## Commands
+
+| Command | Description |
+|---------|-------------|
+| `gitgen init` | Initialize `.gitgen/` directory |
+| `gitgen status` | Show status of specs |
+| `gitgen diff <spec>` | Show predicted diff |
+| `gitgen add <file>` | Create or stage spec |
+| `gitgen commit` | Regenerate staged specs |
+| `gitgen watch` | Auto-regenerate on changes |
+| `gitgen cascade <spec>` | Show inheritance chain |
+| `gitgen validate` | Validate specs without API |
 
 ### `gitgen init [path]`
 Initialize a gitgen repository by creating the `.gitgen/` directory.
@@ -240,16 +259,18 @@ gitgen mcp
 ```
 
 **Available Tools:**
-- `gitgen_init` - Initialize repository
-- `gitgen_status` - Show spec status
-- `gitgen_diff` - Show predicted diff
-- `gitgen_add` - Create/stage specs
-- `gitgen_commit` - Regenerate and write
-- `gitgen_validate` - Validate specs
-- `gitgen_cascade` - Show inheritance chain
+| Tool | Description |
+|------|-------------|
+| `gitgen_init` | Initialize repository |
+| `gitgen_status` | Show spec status |
+| `gitgen_diff` | Show predicted diff |
+| `gitgen_add` | Create/stage specs |
+| `gitgen_commit` | Regenerate and write |
+| `gitgen_validate` | Validate specs |
+| `gitgen_cascade` | Show inheritance chain |
 
 **Available Resources:**
-- `gitgen://spec/<path>` - Read spec contents
+- `gitgen://spec/<path>` - Read spec contents with resolved cascade
 
 Configure in your MCP client:
 ```json
@@ -261,6 +282,22 @@ Configure in your MCP client:
     }
   }
 }
+```
+
+## GitHub Actions
+
+GitGen includes CI/CD workflows:
+
+- **CI** - Runs on every push/PR: typecheck, lint, build, test
+- **Release** - Publishes to npm on version tags
+- **PR Check** - Validates specs, reviews dependencies
+
+```yaml
+# Example: Add gitgen validation to your workflow
+- name: Validate specs
+  run: |
+    gitgen init
+    gitgen validate
 ```
 
 ## Example Workflow
@@ -288,6 +325,16 @@ gitgen diff README.gitgen.md
 gitgen add README.gitgen.md
 gitgen commit -m "Generate initial README"
 ```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Run tests: `npm test`
+5. Submit a pull request
+
+See [PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) for PR guidelines.
 
 ## Environment Variables
 

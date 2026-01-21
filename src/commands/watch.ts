@@ -6,7 +6,6 @@
  */
 
 import { watch } from "node:fs";
-import { readFile } from "node:fs/promises";
 import { resolve, relative, dirname } from "node:path";
 import chalk from "chalk";
 import { createParser } from "../core/parser.js";
@@ -58,7 +57,7 @@ export async function watchCommand(options: WatchOptions = {}): Promise<void> {
   const root: string = maybeRoot;
 
   const store = createStore(root);
-  const parser = createParser();
+  const _parser = createParser();
   const resolver = createResolver();
   const predictor = createPredictor();
   const gitExtractor = createGitExtractor();

@@ -5,8 +5,8 @@
  * Like `git status`.
  */
 
-import { readFile, stat } from "node:fs/promises";
-import { dirname, relative, resolve } from "node:path";
+import { stat } from "node:fs/promises";
+import { relative, resolve } from "node:path";
 import chalk from "chalk";
 import { createParser } from "../core/parser.js";
 import { createStore, findGenMdRoot } from "../core/store.js";

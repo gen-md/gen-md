@@ -116,7 +116,7 @@ function createServer(): Server {
     }
 
     const specPath = `${root}/${relPath}`;
-    const parser = createParser();
+    const _parser = createParser();
     const resolver = createResolver();
 
     try {

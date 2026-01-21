@@ -175,7 +175,7 @@ function inferName(filePath: string): string {
 /**
  * Infer description from file path and content
  */
-function inferDescription(filePath: string, content: string): string {
+function inferDescription(filePath: string, _content: string): string {
   const ext = extname(filePath);
   const base = basename(filePath, ext);
 

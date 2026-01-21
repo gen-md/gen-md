@@ -13,7 +13,6 @@ import {
   readFile,
   writeFile,
   readdir,
-  stat,
 } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import type {
