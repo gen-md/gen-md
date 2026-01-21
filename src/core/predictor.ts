@@ -15,7 +15,7 @@ import type {
   ResolvedGenMdConfig,
 } from "../types.js";
 import { formatGitContextForPrompt } from "../git/context.js";
-import { loadPrompt, interpolate } from "./prompt-loader.js";
+import { loadPrompt, interpolate, loadSkills } from "./prompt-loader.js";
 
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
 const DEFAULT_MAX_TOKENS = 8192;
@@ -102,6 +102,17 @@ export class Predictor {
       );
       const contextContent = interpolate(contextTemplate, { files });
       parts.push(contextContent);
+    }
+
+    // Add skills (domain knowledge)
+    const skillPaths = config.frontmatter.skills || [];
+    if (skillPaths.length > 0) {
+      const skills = await loadSkills(skillPaths);
+      if (skills.length > 0) {
+        const skillsTemplate = await loadPrompt("skills-section");
+        const skillsContent = interpolate(skillsTemplate, { skills });
+        parts.push(skillsContent);
+      }
     }
 
     // Add git context

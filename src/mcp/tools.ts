@@ -106,6 +106,39 @@ export const tools: Tool[] = [
       },
     },
   },
+  {
+    name: "gen_md_validate",
+    description:
+      "Validate .gen.md specs without making API calls. Checks for missing context files, invalid frontmatter, and other issues.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        path: {
+          type: "string",
+          description: "Path to validate (spec or directory, default: current directory)",
+        },
+      },
+    },
+  },
+  {
+    name: "gen_md_cascade",
+    description:
+      "Show the inheritance chain for a .gen.md spec. Helps debug cascading configuration issues.",
+    inputSchema: {
+      type: "object" as const,
+      properties: {
+        spec: {
+          type: "string",
+          description: "Path to .gen.md file",
+        },
+        full: {
+          type: "boolean",
+          description: "Show full content of each file",
+        },
+      },
+      required: ["spec"],
+    },
+  },
 ];
 
 /**
@@ -135,4 +168,13 @@ export interface GenMdCommitInput {
 
 export interface GenMdInitInput {
   path?: string;
+}
+
+export interface GenMdValidateInput {
+  path?: string;
+}
+
+export interface GenMdCascadeInput {
+  spec: string;
+  full?: boolean;
 }

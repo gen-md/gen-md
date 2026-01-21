@@ -15,6 +15,11 @@ import {
   formatDiff,
   addCommand,
   commitCommand,
+  watchCommand,
+  cascadeCommand,
+  formatCascade,
+  validateCommand,
+  formatValidate,
 } from "./commands/index.js";
 import { findGenMdRoot } from "./core/store.js";
 
@@ -170,6 +175,107 @@ program
 
         if (options.json) {
           console.log(JSON.stringify(result, null, 2));
+        }
+      } catch (error) {
+        console.error(chalk.red(`Error: ${(error as Error).message}`));
+        process.exit(1);
+      }
+    }
+  );
+
+// ============================================================================
+// watch command
+// ============================================================================
+program
+  .command("watch")
+  .description("Watch .gen.md files and auto-regenerate on change")
+  .option("-p, --path <path>", "Path to watch", ".")
+  .option("--git", "Include git context in predictions")
+  .option("--debounce <ms>", "Debounce time in ms", "500")
+  .option("--initial", "Run initial generation for all modified specs")
+  .action(
+    async (options: {
+      path: string;
+      git: boolean;
+      debounce: string;
+      initial: boolean;
+    }) => {
+      try {
+        await watchCommand({
+          path: options.path,
+          git: options.git,
+          debounce: parseInt(options.debounce, 10),
+          initial: options.initial,
+        });
+      } catch (error) {
+        console.error(chalk.red(`Error: ${(error as Error).message}`));
+        process.exit(1);
+      }
+    }
+  );
+
+// ============================================================================
+// cascade command
+// ============================================================================
+program
+  .command("cascade")
+  .description("Show the cascade chain for a .gen.md spec")
+  .argument("<spec>", "Path to .gen.md spec")
+  .option("--full", "Show full content of each file")
+  .option("--json", "Output as JSON")
+  .action(
+    async (
+      spec: string,
+      options: {
+        full: boolean;
+        json: boolean;
+      }
+    ) => {
+      try {
+        const result = await cascadeCommand({
+          spec,
+          full: options.full,
+        });
+
+        if (options.json) {
+          console.log(JSON.stringify(result, null, 2));
+        } else {
+          console.log(formatCascade(result));
+        }
+      } catch (error) {
+        console.error(chalk.red(`Error: ${(error as Error).message}`));
+        process.exit(1);
+      }
+    }
+  );
+
+// ============================================================================
+// validate command
+// ============================================================================
+program
+  .command("validate")
+  .description("Validate .gen.md specs without making API calls")
+  .argument("[path]", "Path to validate (spec or directory)", ".")
+  .option("--json", "Output as JSON")
+  .action(
+    async (
+      path: string,
+      options: {
+        json: boolean;
+      }
+    ) => {
+      try {
+        const result = await validateCommand({ path });
+
+        if (options.json) {
+          console.log(JSON.stringify(result, null, 2));
+        } else {
+          console.log(formatValidate(result));
+        }
+
+        // Exit with error code if there are errors
+        if (result.errors > 0) {
+          process.exit(1);
         }
       } catch (error) {
         console.error(chalk.red(`Error: ${(error as Error).message}`));

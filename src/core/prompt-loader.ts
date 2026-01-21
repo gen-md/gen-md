@@ -19,6 +19,7 @@ export type PromptName =
   | "system"
   | "spec-section"
   | "context-section"
+  | "skills-section"
   | "existing-content-section"
   | "examples-section"
   | "instructions-section"
@@ -134,6 +135,7 @@ export async function loadAllPrompts(
     "system",
     "spec-section",
     "context-section",
+    "skills-section",
     "existing-content-section",
     "examples-section",
     "instructions-section",
@@ -145,6 +147,42 @@ export async function loadAllPrompts(
   }
 
   return prompts;
+}
+
+/**
+ * Skill information loaded from a skill file
+ */
+export interface LoadedSkill {
+  name: string;
+  content: string;
+  path: string;
+}
+
+/**
+ * Load skills from file paths
+ * Skills are markdown files that provide domain-specific knowledge
+ */
+export async function loadSkills(skillPaths: string[]): Promise<LoadedSkill[]> {
+  const skills: LoadedSkill[] = [];
+
+  for (const skillPath of skillPaths) {
+    try {
+      const content = await readFile(skillPath, "utf-8");
+      // Extract name from first H1 heading or use filename
+      const nameMatch = content.match(/^#\s+(.+)$/m);
+      const name = nameMatch ? nameMatch[1] : skillPath.split("/").pop()?.replace(/\.(md|txt)$/, "") || "Unknown Skill";
+
+      skills.push({
+        name,
+        content,
+        path: skillPath,
+      });
+    } catch {
+      // Skip skills that can't be read
+    }
+  }
+
+  return skills;
 }
 
 /**
