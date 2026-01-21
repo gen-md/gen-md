@@ -3,20 +3,33 @@
 Generative git.
 
 ```bash
-$ git gen -b feature/dark-mode "add dark mode"
-
-→ Planning: add dark mode
-→ Branch: feature/dark-mode (new)
-→ Generating files...
-  + src/contexts/ThemeContext.tsx
-  + src/hooks/useTheme.ts
-  + src/components/ThemeToggle.tsx
-
-✓ Created 3 files
+npm install -g gitgen && export ANTHROPIC_API_KEY=sk-...
 ```
 
+## Example
+
 ```bash
-npm install -g gitgen && export ANTHROPIC_API_KEY=sk-...
+$ git gen -b feature/auth "add JWT authentication"
+
+→ Planning: add JWT authentication
+→ Branch: feature/auth (new)
+→ Generating files...
+  + src/middleware/auth.ts
+  + src/routes/login.ts
+  + src/utils/jwt.ts
+
+✓ Created 3 files
+
+$ git gen "add password reset"
+
+→ Planning: add password reset
+→ Generating files...
+  + src/routes/reset-password.ts
+  + src/emails/password-reset.ts
+
+✓ Created 2 files
+
+$ git add . && git commit -m "feat: auth with password reset" && git push
 ```
 
 ## Commands
@@ -32,18 +45,8 @@ npm install -g gitgen && export ANTHROPIC_API_KEY=sk-...
 ### Options
 
 ```bash
-git gen -b feature/auth "add auth"   # Create branch + generate
-git gen "add more features"          # Generate on current branch
-git gen --dry-run "add api"          # Preview plan only
-```
-
-### Iterative Session
-
-```bash
-git gen -b feature/auth "add auth"   # 1. Create branch + generate
-git gen "add password reset"         # 2. Add more (current branch)
-git gen "add email verification"     # 3. Add more
-git add . && git commit && git push  # 4. Continue with git
+-b <branch>    Create/switch to branch before generating
+--dry-run      Show plan without generating files
 ```
 
 ## Spec Format

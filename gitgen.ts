@@ -137,6 +137,85 @@ function getGitHistory(file: string, limit = 10): string {
   return diffs.join("\n\n");
 }
 
+async function readFilesSafe(paths: string[]): Promise<string> {
+  const parts: string[] = [];
+  for (const path of paths) {
+    if (existsSync(path)) {
+      try {
+        const content = await readFile(path, "utf-8");
+        // Limit file size to avoid token explosion
+        const truncated = content.length > 5000
+          ? content.slice(0, 5000) + "\n... (truncated)"
+          : content;
+        parts.push(`<file path="${path}">\n${truncated}\n</file>`);
+      } catch {
+        // Skip unreadable files
+      }
+    }
+  }
+  return parts.join("\n\n");
+}
+
+function getProjectContext(allFiles: string[]): string[] {
+  // Priority files for understanding project structure
+  const priorityPatterns = [
+    /^package\.json$/,
+    /^tsconfig\.json$/,
+    /^\.env\.example$/,
+    /^src\/index\.(ts|js|tsx|jsx)$/,
+    /^src\/app\.(ts|js|tsx|jsx)$/,
+    /^src\/main\.(ts|js|tsx|jsx)$/,
+  ];
+
+  const contextFiles: string[] = [];
+
+  // Add priority files first
+  for (const pattern of priorityPatterns) {
+    const match = allFiles.find(f => pattern.test(f));
+    if (match) contextFiles.push(match);
+  }
+
+  // Add a few source files to show patterns (max 5 total)
+  const sourceFiles = allFiles.filter(f =>
+    /\.(ts|js|tsx|jsx)$/.test(f) &&
+    !contextFiles.includes(f) &&
+    !f.includes("node_modules") &&
+    !f.includes(".test.") &&
+    !f.includes(".spec.")
+  );
+
+  for (const f of sourceFiles.slice(0, 5 - contextFiles.length)) {
+    contextFiles.push(f);
+  }
+
+  return contextFiles;
+}
+
+function findRelatedFiles(targetPath: string, allFiles: string[]): string[] {
+  const dir = dirname(targetPath);
+  const ext = targetPath.split('.').pop() || '';
+
+  // Files in same directory or parent
+  const related = allFiles.filter(f => {
+    const fDir = dirname(f);
+    return (fDir === dir || fDir === dirname(dir)) &&
+           f !== targetPath &&
+           f.endsWith(`.${ext}`);
+  });
+
+  // Also look for similar named files (e.g., other routes, other middleware)
+  const baseName = basename(targetPath).replace(/\.[^.]+$/, '');
+  const similar = allFiles.filter(f => {
+    const fBase = basename(f).replace(/\.[^.]+$/, '');
+    return f !== targetPath &&
+           f.endsWith(`.${ext}`) &&
+           (f.includes(dirname(targetPath).split('/').pop() || '') ||
+            fBase.length > 3 && baseName.includes(fBase.slice(0, 3)));
+  });
+
+  return [...new Set([...related, ...similar])].slice(0, 3);
+}
+
 // === LLM ===
 
 async function llm(prompt: string, model = DEFAULT_MODEL): Promise<string> {
@@ -205,12 +284,18 @@ async function generateFeature(
   const fileTemplate = await loadPrompt("branch-file");
 
   const recentCommits = git("log -20 --pretty=format:'%h %s'");
-  const files = git("ls-files").split("\n").slice(0, 50).join("\n");
+  const allFiles = git("ls-files").split("\n").filter(Boolean);
+  const fileList = allFiles.slice(0, 100).join("\n");
+
+  // Read key files for project context
+  const contextFiles = getProjectContext(allFiles);
+  const projectContext = await readFilesSafe(contextFiles);
 
   const planPrompt = renderPrompt(planTemplate, {
     feature,
     recentCommits,
-    files,
+    files: fileList,
+    projectContext,
   });
 
   const planResponse = await llm(planPrompt);
@@ -258,11 +343,16 @@ async function generateFeature(
       existing = await readFile(file.path, "utf-8");
     }
 
+    // Find related files for context
+    const relatedPaths = findRelatedFiles(file.path, allFiles);
+    const relatedContext = await readFilesSafe(relatedPaths);
+
     const filePrompt = renderPrompt(fileTemplate, {
       filePath: file.path,
       feature,
       task: file.description,
       existing,
+      relatedFiles: relatedContext,
     });
 
     const fileContent = await llm(filePrompt);

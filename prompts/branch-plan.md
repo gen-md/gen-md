@@ -10,13 +10,19 @@ You are implementing a feature in a git repository.
 {{files}}
 </files>
 
+{{#projectContext}}
+<project-context>
+{{projectContext}}
+</project-context>
+{{/projectContext}}
+
 Plan the implementation:
-1. List each file to create or modify
-2. For each file, describe what changes are needed
+1. Analyze the project structure and coding patterns from the context
+2. List each file to create or modify
+3. For each file, describe what changes are needed, matching the project's style
 
 Output as JSON:
 {
-  "branch": "feature/short-name",
   "files": [
     {"path": "src/file.ts", "action": "create|modify", "description": "what to do"}
   ]
