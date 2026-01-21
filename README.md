@@ -4,7 +4,7 @@ Predictive git.
 
 ```
 git manages what IS.
-gitgen manages what SHOULD BE.
+gitgen explores EVERYTHING ELSE.
 ```
 
 ## Quick Start

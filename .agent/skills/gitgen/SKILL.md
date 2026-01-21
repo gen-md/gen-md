@@ -6,7 +6,7 @@ Predictive git. Generate specs from git history, and generate new branches for f
 
 ```
 git manages what IS.
-gitgen manages what SHOULD BE.
+gitgen explores EVERYTHING ELSE.
 ```
 
 gitgen bridges git and LLM in both directions:
