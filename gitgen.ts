@@ -220,23 +220,18 @@ async function generateFeature(
   if (!jsonMatch) throw new Error("Failed to parse implementation plan");
 
   const plan = JSON.parse(jsonMatch[0]) as {
-    branch: string;
     files: Array<{ path: string; action: string; description: string }>;
   };
 
-  const currentBranch = git("branch --show-current");
-
   // Handle branch: -b creates/switches, otherwise stay on current
   if (options.branch) {
-    if (currentBranch === options.branch) {
-      // Already on target branch
+    const current = git("branch --show-current");
+    if (current === options.branch) {
       console.log(`→ Branch: ${options.branch}`);
     } else if (branchExists(options.branch)) {
-      // Branch exists, switch to it
       git(`checkout ${options.branch}`);
       console.log(`→ Branch: ${options.branch}`);
     } else {
-      // Create new branch
       git(`checkout -b ${options.branch}`);
       console.log(`→ Branch: ${options.branch} (new)`);
     }
