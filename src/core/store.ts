@@ -140,6 +140,27 @@ export class GenMdStore {
     );
   }
 
+  /**
+   * Get config (alias for readConfig)
+   */
+  async getConfig(): Promise<GenMdConfig> {
+    return this.readConfig();
+  }
+
+  /**
+   * Set config (alias for writeConfig)
+   */
+  async setConfig(config: GenMdConfig): Promise<void> {
+    return this.writeConfig(config);
+  }
+
+  /**
+   * Get all log entries (alias for readLog without filter)
+   */
+  async getLog(): Promise<LogEntry[]> {
+    return this.readLog(undefined, 1000);
+  }
+
   // ============================================================================
   // Object Storage (content-addressed)
   // ============================================================================

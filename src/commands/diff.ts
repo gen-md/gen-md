@@ -30,6 +30,10 @@ export interface DiffOptions {
   json?: boolean;
   /** Dry run - show what would be generated without calling API */
   dryRun?: boolean;
+  /** LLM provider to use */
+  provider?: string;
+  /** Model to use */
+  model?: string;
 }
 
 /**
@@ -111,7 +115,10 @@ export async function diffCommand(options: DiffOptions): Promise<DiffResult> {
     // Generate new prediction using Anthropic API
     console.error(chalk.gray("Generating prediction..."));
 
-    const predictor = createPredictor();
+    const predictor = createPredictor({
+      provider: options.provider,
+      model: options.model,
+    });
     const gitContext = options.git
       ? await createGitExtractor().extract(specPath)
       : null;

@@ -1,11 +1,10 @@
 /**
  * Content Predictor
  *
- * Uses Anthropic API to generate predicted content from .gitgen.md specs.
+ * Uses LLM providers to generate predicted content from .gitgen.md specs.
  * Loads prompts from external markdown files for easy customization.
  */
 
-import Anthropic from "@anthropic-ai/sdk";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import type {
@@ -16,22 +15,29 @@ import type {
 } from "../types.js";
 import { formatGitContextForPrompt } from "../git/context.js";
 import { loadPrompt, interpolate, loadSkills } from "./prompt-loader.js";
+import { providers } from "../providers/index.js";
 
-const DEFAULT_MODEL = "claude-sonnet-4-20250514";
 const DEFAULT_MAX_TOKENS = 8192;
 
 /**
- * Content predictor using Anthropic API
+ * Extended options including provider
+ */
+export interface ExtendedPredictorOptions extends PredictorOptions {
+  /** Provider to use (default: from config or anthropic) */
+  provider?: string;
+}
+
+/**
+ * Content predictor using configurable LLM providers
  */
 export class Predictor {
-  private client: Anthropic;
-  private options: Required<PredictorOptions>;
+  private options: ExtendedPredictorOptions;
 
-  constructor(options: PredictorOptions = {}) {
-    this.client = new Anthropic();
+  constructor(options: ExtendedPredictorOptions = {}) {
     this.options = {
-      model: options.model ?? DEFAULT_MODEL,
       maxTokens: options.maxTokens ?? DEFAULT_MAX_TOKENS,
+      provider: options.provider,
+      model: options.model,
     };
   }
 
@@ -40,40 +46,69 @@ export class Predictor {
    */
   async predict(context: PredictionContext): Promise<PredictedContent> {
     const prompt = await this.buildPrompt(context);
+    const providerName = this.options.provider || providers.getDefaultName();
+    const provider = providers.get(providerName);
 
-    const response = await this.client.messages.create({
-      model: this.options.model,
-      max_tokens: this.options.maxTokens,
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
+    if (!provider) {
+      throw new Error(`Provider "${providerName}" not found`);
+    }
+
+    // Get model from options, spec frontmatter, or provider default
+    const model =
+      this.options.model ||
+      (context.config.frontmatter as Record<string, unknown>).model as string ||
+      provider.models()[0];
+
+    const result = await providers.generate(prompt, {
+      model,
+      maxTokens: this.options.maxTokens,
+      provider: providerName,
     });
 
-    // Extract text content
-    const content = response.content
-      .filter((block): block is Anthropic.TextBlock => block.type === "text")
-      .map((block) => block.text)
-      .join("\n");
-
     // Strip any markdown code fences if the model wrapped the output
-    const cleanContent = this.stripCodeFences(content);
+    const cleanContent = this.stripCodeFences(result.content);
 
     return {
       content: cleanContent,
       hash: createHash("sha256").update(cleanContent).digest("hex"),
-      model: response.model,
-      inputTokens: response.usage.input_tokens,
-      outputTokens: response.usage.output_tokens,
+      model: result.model,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
     };
+  }
+
+  /**
+   * Stream predicted content from a spec
+   */
+  async *stream(context: PredictionContext): AsyncIterable<string> {
+    const prompt = await this.buildPrompt(context);
+    const providerName = this.options.provider || providers.getDefaultName();
+    const provider = providers.get(providerName);
+
+    if (!provider) {
+      throw new Error(`Provider "${providerName}" not found`);
+    }
+
+    if (!provider.stream) {
+      throw new Error(`Provider "${providerName}" does not support streaming`);
+    }
+
+    const model =
+      this.options.model ||
+      (context.config.frontmatter as Record<string, unknown>).model as string ||
+      provider.models()[0];
+
+    yield* providers.stream(prompt, {
+      model,
+      maxTokens: this.options.maxTokens,
+      provider: providerName,
+    });
   }
 
   /**
    * Build the prompt for the API call using external templates
    */
-  private async buildPrompt(context: PredictionContext): Promise<string> {
+  async buildPrompt(context: PredictionContext): Promise<string> {
     const { config, gitContext, existingContent, referencedFiles } = context;
     const parts: string[] = [];
 
@@ -209,6 +244,6 @@ export async function buildPredictionContext(
 /**
  * Create a predictor instance
  */
-export function createPredictor(options?: PredictorOptions): Predictor {
+export function createPredictor(options?: ExtendedPredictorOptions): Predictor {
   return new Predictor(options);
 }

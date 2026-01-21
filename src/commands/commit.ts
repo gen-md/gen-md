@@ -27,6 +27,10 @@ export interface CommitOptions {
   dryRun?: boolean;
   /** Output as JSON */
   json?: boolean;
+  /** LLM provider to use */
+  provider?: string;
+  /** Model to use */
+  model?: string;
 }
 
 /**
@@ -46,7 +50,10 @@ export async function commitCommand(
   const store = createStore(root);
   const _parser = _createParser();
   const resolver = createResolver();
-  const predictor = createPredictor();
+  const predictor = createPredictor({
+    provider: options.provider,
+    model: options.model,
+  });
 
   // Get staged specs
   const stagedSpecs = await store.getStagedSpecs();

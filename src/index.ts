@@ -2,7 +2,7 @@
 /**
  * gitgen CLI
  *
- * Git-like MCP for predictive version control using .gitgen.md specs.
+ * Git for AI-generated content. Version control for what SHOULD BE.
  */
 
 import { Command } from "commander";
@@ -20,6 +20,17 @@ import {
   formatCascade,
   validateCommand,
   formatValidate,
+  refineCommand,
+  configCommand,
+  providerCommand,
+  formatConfig,
+  formatProviders,
+  logCommand,
+  formatLog,
+  showCommand,
+  formatShow,
+  resetCommand,
+  formatReset,
 } from "./commands/index.js";
 import { findGenMdRoot } from "./core/store.js";
 
@@ -27,8 +38,8 @@ const program = new Command();
 
 program
   .name("gitgen")
-  .description("Git-like MCP for predictive version control using .gitgen.md specs")
-  .version("0.1.0");
+  .description("Git for AI-generated content. Version control for what SHOULD BE.")
+  .version("0.2.0");
 
 // ============================================================================
 // init command
@@ -82,6 +93,8 @@ program
   .option("--dry-run", "Show what would be generated without API call")
   .option("--json", "Output as JSON")
   .option("--no-color", "Disable colored output")
+  .option("--provider <name>", "LLM provider to use")
+  .option("--model <name>", "Model to use")
   .action(
     async (
       spec: string,
@@ -91,6 +104,8 @@ program
         dryRun: boolean;
         json: boolean;
         color: boolean;
+        provider?: string;
+        model?: string;
       }
     ) => {
       try {
@@ -99,6 +114,8 @@ program
           cached: options.cached,
           git: options.git,
           dryRun: options.dryRun,
+          provider: options.provider,
+          model: options.model,
         });
 
         if (options.json) {
@@ -159,23 +176,62 @@ program
   .option("--git", "Include git context in predictions")
   .option("--dry-run", "Preview without writing files")
   .option("--json", "Output as JSON")
+  .option("--provider <name>", "LLM provider to use")
+  .option("--model <name>", "Model to use")
   .action(
     async (options: {
       message?: string;
       git: boolean;
       dryRun: boolean;
       json: boolean;
+      provider?: string;
+      model?: string;
     }) => {
       try {
         const result = await commitCommand({
           message: options.message,
           git: options.git,
           dryRun: options.dryRun,
+          provider: options.provider,
+          model: options.model,
         });
 
         if (options.json) {
           console.log(JSON.stringify(result, null, 2));
         }
+      } catch (error) {
+        console.error(chalk.red(`Error: ${(error as Error).message}`));
+        process.exit(1);
+      }
+    }
+  );
+
+// ============================================================================
+// refine command (NEW)
+// ============================================================================
+program
+  .command("refine")
+  .description("Interactive refinement session for a spec")
+  .argument("<spec>", "Path to .gitgen.md spec")
+  .option("--git", "Include git context in predictions")
+  .option("--provider <name>", "LLM provider to use")
+  .option("--model <name>", "Model to use")
+  .action(
+    async (
+      spec: string,
+      options: {
+        git?: boolean;
+        provider?: string;
+        model?: string;
+      }
+    ) => {
+      try {
+        await refineCommand({
+          spec,
+          git: options.git,
+          provider: options.provider,
+          model: options.model,
+        });
       } catch (error) {
         console.error(chalk.red(`Error: ${(error as Error).message}`));
         process.exit(1);
@@ -283,6 +339,153 @@ program
       }
     }
   );
+
+// ============================================================================
+// log command (NEW)
+// ============================================================================
+program
+  .command("log")
+  .description("Show generation history")
+  .argument("[spec]", "Path to .gitgen.md spec (optional)")
+  .option("-n, --limit <n>", "Limit number of entries")
+  .option("--json", "Output as JSON")
+  .action(
+    async (
+      spec: string | undefined,
+      options: {
+        limit?: string;
+        json: boolean;
+      }
+    ) => {
+      try {
+        const result = await logCommand({
+          spec,
+          limit: options.limit ? parseInt(options.limit, 10) : undefined,
+        });
+        const root = await findGenMdRoot(process.cwd());
+
+        if (options.json) {
+          console.log(JSON.stringify(result, null, 2));
+        } else {
+          console.log(formatLog(result, root || process.cwd()));
+        }
+      } catch (error) {
+        console.error(chalk.red(`Error: ${(error as Error).message}`));
+        process.exit(1);
+      }
+    }
+  );
+
+// ============================================================================
+// show command (NEW)
+// ============================================================================
+program
+  .command("show")
+  .description("Show a specific generation by hash")
+  .argument("<hash>", "Generation hash (or prefix)")
+  .option("--json", "Output as JSON")
+  .action(
+    async (
+      hash: string,
+      options: {
+        json: boolean;
+      }
+    ) => {
+      try {
+        const result = await showCommand({ hash });
+
+        if (options.json) {
+          console.log(JSON.stringify(result, null, 2));
+        } else {
+          console.log(formatShow(result));
+        }
+      } catch (error) {
+        console.error(chalk.red(`Error: ${(error as Error).message}`));
+        process.exit(1);
+      }
+    }
+  );
+
+// ============================================================================
+// reset command (NEW)
+// ============================================================================
+program
+  .command("reset")
+  .description("Reset a file to a previous generation")
+  .argument("<hash>", "Generation hash (or prefix)")
+  .option("--hard", "Actually reset the file (otherwise preview)")
+  .action(
+    async (
+      hash: string,
+      options: {
+        hard: boolean;
+      }
+    ) => {
+      try {
+        const result = await resetCommand({
+          hash,
+          hard: options.hard,
+        });
+
+        console.log(formatReset(result));
+      } catch (error) {
+        console.error(chalk.red(`Error: ${(error as Error).message}`));
+        process.exit(1);
+      }
+    }
+  );
+
+// ============================================================================
+// config command (NEW)
+// ============================================================================
+program
+  .command("config")
+  .description("Manage gitgen configuration")
+  .argument("<action>", "Action: get, set, list, unset")
+  .argument("[key]", "Config key (e.g., provider, model)")
+  .argument("[value]", "Config value (for set)")
+  .action(
+    async (
+      action: string,
+      key: string | undefined,
+      value: string | undefined
+    ) => {
+      try {
+        const result = await configCommand({
+          action: action as "get" | "set" | "list" | "unset",
+          key,
+          value,
+        });
+
+        console.log(formatConfig(result));
+      } catch (error) {
+        console.error(chalk.red(`Error: ${(error as Error).message}`));
+        process.exit(1);
+      }
+    }
+  );
+
+// ============================================================================
+// provider command (NEW)
+// ============================================================================
+program
+  .command("provider")
+  .description("Manage LLM providers")
+  .argument("<action>", "Action: list, models")
+  .argument("[name]", "Provider name (for models)")
+  .action(async (action: string, name: string | undefined) => {
+    try {
+      const result = await providerCommand({
+        action: action as "list" | "models",
+        provider: name,
+      });
+
+      console.log(formatProviders(result));
+    } catch (error) {
+      console.error(chalk.red(`Error: ${(error as Error).message}`));
+      process.exit(1);
+    }
+  });
 
 // ============================================================================
 // Parse and run

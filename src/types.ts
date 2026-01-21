@@ -116,13 +116,17 @@ export interface LogEntry {
 }
 
 /**
- * Configuration in .gitgen/config
+ * Configuration in .gitgen/config.json
  */
 export interface GenMdConfig {
+  /** Default provider to use */
+  provider?: string;
   /** Default model to use */
   model?: string;
   /** Default branch */
   defaultBranch?: string;
+  /** Provider configurations */
+  providers?: Record<string, ProviderConfig>;
 }
 
 // ============================================================================
@@ -327,37 +331,110 @@ export interface CommitResult {
 }
 
 // ============================================================================
-// MCP Types
+// Provider Types
 // ============================================================================
 
 /**
- * MCP tool input for gitgen_status
+ * Options for LLM generation
  */
-export interface StatusToolInput {
-  path?: string;
+export interface GenerateOptions {
+  /** Model to use */
+  model: string;
+  /** Maximum tokens to generate */
+  maxTokens?: number;
+  /** Temperature for generation */
+  temperature?: number;
+  /** System prompt */
+  systemPrompt?: string;
 }
 
 /**
- * MCP tool input for gitgen_diff
+ * Result of LLM generation
  */
-export interface DiffToolInput {
-  spec: string;
-  cached?: boolean;
+export interface GenerateResult {
+  /** Generated content */
+  content: string;
+  /** Model used */
+  model: string;
+  /** Input token count */
+  inputTokens: number;
+  /** Output token count */
+  outputTokens: number;
+  /** Finish reason */
+  finishReason: string;
 }
 
 /**
- * MCP tool input for gitgen_add
+ * LLM Provider interface
  */
-export interface AddToolInput {
-  file?: string;
-  spec?: string;
-  description?: string;
+export interface LLMProvider {
+  /** Provider name */
+  name: string;
+  /** Generate content */
+  generate(prompt: string, options: GenerateOptions): Promise<GenerateResult>;
+  /** Stream content (optional) */
+  stream?(prompt: string, options: GenerateOptions): AsyncIterable<string>;
+  /** Get available models */
+  models(): string[];
+  /** Check if provider is configured */
+  isConfigured(): boolean;
 }
 
 /**
- * MCP tool input for gitgen_commit
+ * Provider configuration
  */
-export interface CommitToolInput {
-  message?: string;
-  dryRun?: boolean;
+export interface ProviderConfig {
+  /** Provider name */
+  name: string;
+  /** API key (if applicable) */
+  apiKey?: string;
+  /** Base URL (for custom endpoints) */
+  baseUrl?: string;
+  /** Default model */
+  defaultModel?: string;
+  /** Additional options */
+  options?: Record<string, unknown>;
+}
+
+// ============================================================================
+// Refine Session Types
+// ============================================================================
+
+/**
+ * Entry in refinement history
+ */
+export interface RefineEntry {
+  /** Generated content */
+  content: string;
+  /** Content hash */
+  hash: string;
+  /** Timestamp */
+  timestamp: Date;
+  /** User feedback that led to this version */
+  feedback?: string;
+  /** Model used */
+  model: string;
+  /** Provider used */
+  provider: string;
+  /** Token usage */
+  tokens: {
+    input: number;
+    output: number;
+  };
+}
+
+/**
+ * Refinement session state
+ */
+export interface RefineSession {
+  /** Path to the spec file */
+  specPath: string;
+  /** Current content version */
+  currentContent: string;
+  /** Refinement history */
+  history: RefineEntry[];
+  /** Accumulated feedback */
+  feedback: string[];
+  /** Session start time */
+  startedAt: Date;
 }
