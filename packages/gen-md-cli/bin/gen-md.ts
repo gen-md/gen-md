@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
-import { compactCommand, cascadeCommand, validateCommand } from "../src/index.js";
+import { compactCommand, cascadeCommand, validateCommand, promptCommand } from "../src/index.js";
 
 const program = new Command();
 
@@ -14,6 +14,7 @@ program
 program.addCommand(compactCommand);
 program.addCommand(cascadeCommand);
 program.addCommand(validateCommand);
+program.addCommand(promptCommand);
 
 // Parse arguments
 program.parse();

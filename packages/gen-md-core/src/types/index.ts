@@ -1,4 +1,15 @@
 /**
+ * A one-shot example for conversational prompts
+ */
+export interface OneShotExample {
+  /** Example input/specification */
+  input: string;
+
+  /** Example output/result */
+  output: string;
+}
+
+/**
  * Represents a parsed .gen.md file
  */
 export interface GenMdFile {
@@ -8,8 +19,11 @@ export interface GenMdFile {
   /** Parsed frontmatter configuration */
   frontmatter: GenMdFrontmatter;
 
-  /** Raw markdown body content (inside <input> tags) */
+  /** Markdown body content (everything after frontmatter, excluding examples) */
   body: string;
+
+  /** One-shot examples parsed from <example> blocks */
+  examples: OneShotExample[];
 
   /** Original raw content of the file */
   raw: string;
@@ -117,4 +131,38 @@ export interface CompactOptions {
 
   /** Base directory for path resolution */
   basePath?: string;
+}
+
+/**
+ * Options for prompt generation
+ */
+export interface PromptOptions {
+  /** Strategy for merging examples during cascade */
+  examplesMerge?: ArrayMergeStrategy;
+
+  /** Whether to include current output file content as an example */
+  includeCurrentOutput?: boolean;
+
+  /** Override user prompt (instead of body content) */
+  userPrompt?: string;
+}
+
+/**
+ * Result of generating a conversational prompt
+ */
+export interface GeneratedPrompt {
+  /** The fully rendered conversational prompt string */
+  prompt: string;
+
+  /** All one-shot examples included */
+  examples: OneShotExample[];
+
+  /** The body content (user prompt) */
+  body: string;
+
+  /** Current output file content (if exists and included) */
+  currentCode: string | null;
+
+  /** Source .gen.md file path */
+  sourcePath: string;
 }

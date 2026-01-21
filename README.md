@@ -13,6 +13,7 @@ Stop writing code for content generation. Instead, groom and cascade in-codebase
 - **File-Specific Prompts**: Each `.gen.md` file describes how to generate its corresponding file
 - **Metadata-Driven**: Use a simple metadata header to define name, description, context, and skills
 - **Context and Skills**: Reference other files or reusable skill modules to enrich the generation process
+- **Conversational Prompts**: Generate LLM-ready prompts with one-shot examples
 - **Git-Aware Generation**: Incorporate Git history to create more informed, contextual prompts
 - **Cascading Context**: Define global `.gen.md` files in parent folders to apply common patterns
 - **Compaction**: Merge multiple `.gen.md` files into a single consolidated generator
@@ -32,10 +33,15 @@ prompt: $prompt
 output: "output-filename.ext"
 ---
 
-<input>
-Generation instructions go here.
-$prompt
-</input>
+Generation instructions go here as plain markdown.
+No <input> tags needed - the body is the prompt.
+
+One-shot examples use <example> blocks:
+<example>
+input specification
+---
+output result
+</example>
 ```
 
 **Frontmatter Fields:**
@@ -52,7 +58,7 @@ $prompt
 
 ### @gen-md/core
 
-Core library providing parsing, cascading resolution, compaction, and validation.
+Core library providing parsing, cascading resolution, compaction, validation, and prompt generation.
 
 ```bash
 npm install @gen-md/core
@@ -63,16 +69,24 @@ import {
   GenMdParser,
   CascadingResolver,
   Compactor,
-  Validator
+  Validator,
+  PromptGenerator
 } from '@gen-md/core';
 
 // Parse a .gen.md file
 const parser = new GenMdParser();
 const file = await parser.parse('./README.gen.md');
+console.log(file.body);      // The prompt content
+console.log(file.examples);  // One-shot examples
 
 // Resolve cascade chain
 const resolver = new CascadingResolver();
 const resolved = await resolver.resolve('./packages/cli/README.gen.md');
+
+// Generate conversational prompt
+const promptGen = new PromptGenerator();
+const result = await promptGen.generate('./README.gen.md');
+console.log(result.prompt);  // Ready for LLM
 
 // Compact multiple files
 const compactor = new Compactor({ arrayMerge: 'dedupe' });
@@ -92,6 +106,14 @@ npm install -g @gen-md/cli
 # or use via npx
 npx gen-md <command>
 ```
+
+**Commands:**
+| Command | Description |
+|---------|-------------|
+| `cascade <file>` | Preview cascade chain |
+| `validate <files...>` | Validate .gen.md files |
+| `compact <files...>` | Merge multiple .gen.md files |
+| `prompt <file>` | Generate conversational prompt |
 
 ### Extensions
 
@@ -115,6 +137,7 @@ gen-md/
 │   │   │   ├── resolver/     # Cascading resolver
 │   │   │   ├── compactor/    # File merger & serializer
 │   │   │   ├── validator/    # Validation system
+│   │   │   ├── prompt/       # Prompt generator
 │   │   │   └── __tests__/    # Unit tests
 │   │   └── package.json
 │   ├── gen-md-cli/           # CLI package
@@ -151,17 +174,14 @@ npx gen-md --help
 ### Quick Start
 
 ```bash
-# Initialize a new repo with .gen.md
-npx gen-md init .
-
-# Create a generator for README
-npx gen-md infer README.md
-
-# Generate from .gen.md file
-npx gen-md gen README.md
+# Preview cascade chain
+npx gen-md cascade ./README.gen.md --show-merged
 
 # Validate all generators
 npx gen-md validate *.gen.md
+
+# Generate conversational prompt
+npx gen-md prompt ./README.gen.md
 ```
 
 ## Cascading Configuration
@@ -226,32 +246,31 @@ npx gen-md validate *.gen.md
 | `--no-check-skills` | Skip checking if skill files exist |
 | `--json` | Output results as JSON |
 
-## CLI Reference
+## Prompt Generation
 
-| Command | Description |
-|---------|-------------|
-| `gen <file>` | Generate output from .gen.md (with cascading) |
-| `init <dir>` | Initialize .gen.md for directory |
-| `infer <file>` | Infer .gen.md from existing file |
-| `compact <files...>` | Merge multiple .gen.md files |
-| `cascade <file>` | Preview cascade chain |
-| `validate <files...>` | Validate .gen.md files |
+Generate conversational prompts with one-shot examples:
 
-## Editor Integration
+```bash
+npx gen-md prompt ./README.gen.md
+```
 
-![Editor View](./tests/e2e/screenshots/gen-md-editor.png)
-
-The gen-md editor provides:
-- Split view with input (.gen.md) and output preview
-- Syntax highlighting for YAML frontmatter
-- Real-time generation preview
-- Cascade chain visualization
+**Options:**
+| Option | Description |
+|--------|-------------|
+| `-o, --output <file>` | Write prompt to file |
+| `--no-current-code` | Don't include current output content |
+| `--user-prompt <text>` | Override the user prompt |
+| `--examples-merge <strategy>` | concatenate, prepend, replace, dedupe |
+| `--json` | Output as JSON structure |
 
 ## Testing
 
 ### Unit Tests
 
 ```bash
+# Run all unit tests
+npm run test
+
 # Run core library tests
 cd packages/gen-md-core && npm test
 
@@ -263,13 +282,13 @@ cd packages/gen-md-cli && npm test
 
 ```bash
 # Run Playwright E2E tests
-cd tests/e2e && npm test
+npm run test:e2e
 
 # Run with UI
-npm run test:ui
+npm run test:e2e -- --ui
 
 # Run headed (visible browser)
-npm run test:headed
+npm run test:e2e -- --headed
 ```
 
 ## Platform Support

@@ -1,7 +1,11 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import yaml from "js-yaml";
-import type { GenMdFile, GenMdFrontmatter } from "../types/index.js";
+import type {
+  GenMdFile,
+  GenMdFrontmatter,
+  OneShotExample,
+} from "../types/index.js";
 
 /**
  * Parser for .gen.md files
@@ -21,11 +25,13 @@ export class GenMdParser {
    */
   parseContent(content: string, filePath: string = "unknown"): GenMdFile {
     const { frontmatter, body } = this.splitFrontmatterAndBody(content);
+    const { examples, remainingBody } = this.parseExamples(body);
 
     return {
       filePath: path.resolve(filePath),
       frontmatter: this.parseFrontmatter(frontmatter),
-      body: this.parseBody(body),
+      body: remainingBody,
+      examples,
       raw: content,
     };
   }
@@ -78,19 +84,47 @@ export class GenMdParser {
   }
 
   /**
-   * Parse body content, extracting <input> section if present
+   * Parse <example> blocks from body content.
+   * Example format:
+   * <example>
+   * input content
+   * ---
+   * output content
+   * </example>
    */
-  private parseBody(body: string): string {
-    // Extract content from <input>...</input> tags
-    const inputRegex = /<input>([\s\S]*?)<\/input>/;
-    const match = body.match(inputRegex);
+  private parseExamples(body: string): {
+    examples: OneShotExample[];
+    remainingBody: string;
+  } {
+    const examples: OneShotExample[] = [];
 
-    if (match) {
-      return match[1].trim();
+    // Match all <example>...</example> blocks
+    const exampleRegex = /<example>([\s\S]*?)<\/example>/g;
+
+    let remainingBody = body;
+    let match;
+
+    while ((match = exampleRegex.exec(body)) !== null) {
+      const exampleContent = match[1].trim();
+
+      // Split on --- separator (first occurrence only)
+      const separatorIndex = exampleContent.indexOf("\n---\n");
+
+      if (separatorIndex !== -1) {
+        const input = exampleContent.substring(0, separatorIndex).trim();
+        const output = exampleContent.substring(separatorIndex + 5).trim();
+
+        examples.push({ input, output });
+      } else {
+        // No separator found, treat entire content as input with empty output
+        examples.push({ input: exampleContent, output: "" });
+      }
     }
 
-    // No <input> tags, return entire body
-    return body.trim();
+    // Remove all <example> blocks from body
+    remainingBody = body.replace(exampleRegex, "").trim();
+
+    return { examples, remainingBody };
   }
 }
 

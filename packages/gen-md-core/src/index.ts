@@ -1,5 +1,6 @@
 // Types
 export type {
+  OneShotExample,
   GenMdFile,
   GenMdFrontmatter,
   ResolvedGenMdConfig,
@@ -7,6 +8,8 @@ export type {
   BodyMergeStrategy,
   CascadeOptions,
   CompactOptions,
+  PromptOptions,
+  GeneratedPrompt,
 } from "./types/index.js";
 
 // Parser
@@ -36,6 +39,9 @@ export {
   createValidator,
   formatValidationResults,
 } from "./validator/index.js";
+
+// Prompt Generator
+export { PromptGenerator, createPromptGenerator } from "./prompt/index.js";
 
 // Utilities
 export { mergeArrays, mergeBody, deduplicateArray } from "./utils/merge.js";

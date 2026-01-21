@@ -5,6 +5,7 @@ import type {
   GenMdFile,
   GenMdFrontmatter,
   CompactOptions,
+  OneShotExample,
 } from "../types/index.js";
 
 /**
@@ -125,16 +126,23 @@ export class Compactor {
 
     let merged: GenMdFrontmatter = { ...first.frontmatter };
     let mergedBody = first.body;
+    let mergedExamples: OneShotExample[] = [...first.examples];
 
     for (const file of rest) {
       merged = this.mergeFrontmatter(merged, file.frontmatter);
       mergedBody = this.mergeBodyContent(mergedBody, file.body);
+      mergedExamples = mergeArrays(
+        mergedExamples,
+        file.examples,
+        this.options.arrayMerge
+      ) as OneShotExample[];
     }
 
     return {
       filePath: this.options.output,
       frontmatter: merged,
       body: mergedBody,
+      examples: mergedExamples,
       raw: "", // Will be regenerated on serialize
     };
   }
@@ -183,9 +191,31 @@ export class GenMdSerializer {
    */
   serialize(file: GenMdFile): string {
     const frontmatter = this.serializeFrontmatter(file.frontmatter);
+    const examples = this.serializeExamples(file.examples);
     const body = file.body.trim();
 
-    return `---\n${frontmatter}---\n<input>\n${body}\n</input>\n`;
+    const parts = [`---\n${frontmatter}---`];
+    if (examples) {
+      parts.push(examples);
+    }
+    parts.push(body);
+
+    return parts.join("\n") + "\n";
+  }
+
+  /**
+   * Serialize examples to <example> blocks
+   */
+  private serializeExamples(examples: OneShotExample[]): string {
+    if (!examples || examples.length === 0) {
+      return "";
+    }
+
+    return examples
+      .map(
+        (ex) => `<example>\n${ex.input}\n---\n${ex.output}\n</example>`
+      )
+      .join("\n\n");
   }
 
   /**

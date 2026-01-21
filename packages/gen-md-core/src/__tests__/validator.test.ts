@@ -26,9 +26,7 @@ describe("Validator", () => {
 name: "Test"
 output: "test"
 ---
-<input>
 Generate test content.
-</input>
 `
       );
       await fs.writeFile(outputPath, "Generated content");
@@ -49,9 +47,7 @@ Generate test content.
 name: "Test"
 output: "missing-output.md"
 ---
-<input>
 Generate test content.
-</input>
 `
       );
 
@@ -74,9 +70,7 @@ name: "Test"
 output: "test"
 context: ["./missing.json"]
 ---
-<input>
 Generate test content.
-</input>
 `
       );
       await fs.writeFile(outputPath, "Generated content");
@@ -99,9 +93,7 @@ name: "Test"
 output: "test"
 skills: ["./missing-skill.md"]
 ---
-<input>
 Generate test content.
-</input>
 `
       );
       await fs.writeFile(outputPath, "Generated content");
@@ -123,8 +115,6 @@ Generate test content.
 name: "Test"
 output: "test"
 ---
-<input>
-</input>
 `
       );
       await fs.writeFile(outputPath, "Generated content");
@@ -146,9 +136,7 @@ name: "Test"
 output: "test"
 skills: ["skill-name-only"]
 ---
-<input>
 Test content.
-</input>
 `
       );
       await fs.writeFile(outputPath, "Generated content");
@@ -168,8 +156,8 @@ Test content.
       const outputPath1 = path.join(tempDir, "test1");
       const outputPath2 = path.join(tempDir, "test2");
 
-      await fs.writeFile(genMdPath1, `---\noutput: "test1"\n---\n<input>Body</input>`);
-      await fs.writeFile(genMdPath2, `---\noutput: "test2"\n---\n<input>Body</input>`);
+      await fs.writeFile(genMdPath1, `---\noutput: "test1"\n---\nBody`);
+      await fs.writeFile(genMdPath2, `---\noutput: "test2"\n---\nBody`);
       await fs.writeFile(outputPath1, "Content 1");
       await fs.writeFile(outputPath2, "Content 2");
 

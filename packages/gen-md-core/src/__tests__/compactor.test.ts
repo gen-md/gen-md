@@ -14,15 +14,16 @@ describe("GenMdSerializer", () => {
         output: "output.md",
       },
       body: "Generate content.",
+      examples: [],
       raw: "",
     };
 
     const result = serializer.serialize(file);
 
-    expect(result).toContain("name: \"Test\"");
-    expect(result).toContain("description: \"A test file\"");
-    expect(result).toContain("output: \"output.md\"");
-    expect(result).toContain("<input>\nGenerate content.\n</input>");
+    expect(result).toContain('name: "Test"');
+    expect(result).toContain('description: "A test file"');
+    expect(result).toContain('output: "output.md"');
+    expect(result).toContain("Generate content.");
   });
 
   it("should serialize arrays correctly", () => {
@@ -33,6 +34,7 @@ describe("GenMdSerializer", () => {
         skills: ["skill1"],
       },
       body: "Body",
+      examples: [],
       raw: "",
     };
 
@@ -51,12 +53,35 @@ describe("GenMdSerializer", () => {
         context: [],
       },
       body: "Body",
+      examples: [],
       raw: "",
     };
 
     const result = serializer.serialize(file);
 
     expect(result).toContain("context: []");
+  });
+
+  it("should serialize examples", () => {
+    const file: GenMdFile = {
+      filePath: "test.gen.md",
+      frontmatter: {
+        name: "Test",
+      },
+      body: "Generate content.",
+      examples: [
+        { input: "Create a button", output: "const btn = <button />;" },
+      ],
+      raw: "",
+    };
+
+    const result = serializer.serialize(file);
+
+    expect(result).toContain("<example>");
+    expect(result).toContain("Create a button");
+    expect(result).toContain("---");
+    expect(result).toContain("const btn = <button />;");
+    expect(result).toContain("</example>");
   });
 });
 
