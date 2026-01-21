@@ -1,6 +1,6 @@
 # gitgen
 
-Minimal bridge between git and LLM. Generate files from `.gitgen.md` specs.
+Minimal bridge between git and LLM, and vice versa. Generate files from `.gitgen.md` specs.
 
 ```
 git manages what IS.
@@ -12,7 +12,9 @@ gitgen manages what SHOULD BE.
 One file = one output. Define what a file should contain in a `.gitgen.md` spec, and gitgen generates it.
 
 ```bash
-gitgen README.gitgen.md    # Generates README.md
+gitgen .                   # Uses .gitgen.md in current directory
+gitgen src/                # Uses src/.gitgen.md
+gitgen README.gitgen.md    # Uses specific spec file
 ```
 
 ## Installation
@@ -48,8 +50,10 @@ Generate a README with:
 ## Commands
 
 ```bash
-gitgen <spec.gitgen.md>       # Generate output file
-gitgen diff <spec.gitgen.md>  # Preview changes
+gitgen .                      # Generate from .gitgen.md in current dir
+gitgen <dir>                  # Generate from .gitgen.md in directory
+gitgen <spec.gitgen.md>       # Generate from specific spec file
+gitgen diff <dir|spec>        # Preview changes
 gitgen --help                 # Show help
 ```
 

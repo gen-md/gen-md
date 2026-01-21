@@ -1,12 +1,12 @@
 #!/usr/bin/env npx tsx
 /**
- * gitgen - Minimal bridge between git and LLM
+ * gitgen - Minimal bridge between git and LLM, and vice versa
  *
  * Parse .gitgen.md specs → Read context → Generate content → Write output
  */
 
 import { readFile, writeFile } from "node:fs/promises";
-import { dirname, resolve, relative } from "node:path";
+import { dirname, resolve, relative, join } from "node:path";
 import { existsSync } from "node:fs";
 import Anthropic from "@anthropic-ai/sdk";
 import matter from "gray-matter";
@@ -141,18 +141,47 @@ function showDiff(oldContent: string, newContent: string, path: string): void {
   }
 }
 
+// === RESOLVE ===
+
+function resolveSpecPath(pathArg: string): string {
+  // If it's a .gitgen.md file, use it directly
+  if (pathArg.endsWith(".gitgen.md")) {
+    if (!existsSync(pathArg)) {
+      throw new Error(`File not found: ${pathArg}`);
+    }
+    return pathArg;
+  }
+
+  // If it's a directory, look for .gitgen.md inside
+  const dirSpec = join(pathArg, ".gitgen.md");
+  if (existsSync(dirSpec)) {
+    return dirSpec;
+  }
+
+  // Check if target itself exists as a file (without .gitgen.md extension)
+  if (existsSync(pathArg) && !pathArg.includes("/") && !pathArg.includes("\\")) {
+    throw new Error(`Not a .gitgen.md file: ${pathArg}`);
+  }
+
+  throw new Error(`No .gitgen.md found in ${pathArg === "." ? "current directory" : pathArg}`);
+}
+
 // === CLI ===
 
 function printUsage(): void {
   console.log(`gitgen - Minimal bridge between git and LLM
 
 Usage:
-  gitgen <spec.gitgen.md>       Generate output file from spec
-  gitgen diff <spec.gitgen.md>  Preview generated content (diff)
+  gitgen .                      Generate from .gitgen.md in current directory
+  gitgen <dir>                  Generate from .gitgen.md in directory
+  gitgen <spec.gitgen.md>       Generate from specific spec file
+  gitgen diff <dir|spec>        Preview generated content (diff)
   gitgen --help                 Show this help
 
-Example:
-  gitgen README.gitgen.md       Generates README.md from spec
+Examples:
+  gitgen .                      Uses ./.gitgen.md
+  gitgen src/                   Uses src/.gitgen.md
+  gitgen README.gitgen.md       Uses README.gitgen.md directly
 
 Spec format (.gitgen.md):
   ---
@@ -173,26 +202,24 @@ Environment:
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
 
-  if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
+  if (args.includes("--help") || args.includes("-h")) {
     printUsage();
     process.exit(0);
   }
 
   const isDiff = args[0] === "diff";
-  const specPath = isDiff ? args[1] : args[0];
+  const pathArg = isDiff ? args[1] : args[0];
 
-  if (!specPath) {
-    console.error("Error: No spec file provided");
+  if (!pathArg) {
+    console.error("Error: No path provided");
     printUsage();
     process.exit(1);
   }
 
-  if (!existsSync(specPath)) {
-    console.error(`Error: File not found: ${specPath}`);
-    process.exit(1);
-  }
-
   try {
+    // Resolve spec path (supports directory-level .gitgen.md)
+    const specPath = resolveSpecPath(pathArg);
+
     // Parse spec
     const content = await readFile(specPath, "utf-8");
     const parsed = parseSpec(content, specPath);

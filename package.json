@@ -1,7 +1,7 @@
 {
   "name": "gitgen",
   "version": "1.0.0",
-  "description": "Minimal bridge between git and LLM. Generate files from .gitgen.md specs.",
+  "description": "Minimal bridge between git and LLM, and vice versa. Generate files from .gitgen.md specs.",
   "type": "module",
   "bin": {
     "gitgen": "./gitgen.ts"
