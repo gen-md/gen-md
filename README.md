@@ -62,6 +62,15 @@ git gen branch --dry-run "add dark mode"    # Preview plan only
 git gen branch --no-checkout "add feature"  # Create branch, stay on current
 ```
 
+### Iterative Session
+
+```bash
+git gen branch --dry-run "add auth"         # 1. Preview plan
+git gen branch "add auth"                   # 2. Generate
+git gen branch -n feature/auth "add reset"  # 3. Add more to same branch
+git add . && git commit && git push         # 4. Continue with git
+```
+
 ## Spec Format
 
 ```yaml

@@ -60,9 +60,10 @@ git gen branch --dry-run "add dark mode"    # Preview plan only
 git gen branch --no-checkout "add feature"  # Create branch, stay on current
 ```
 
-### Dry Run Example
+### Iterative Session
 
 ```bash
+# 1. Preview the plan
 $ git gen branch --dry-run "add user authentication"
 
 → Planning: add user authentication
@@ -72,10 +73,35 @@ $ git gen branch --dry-run "add user authentication"
     JWT authentication middleware
   + src/routes/auth.ts
     Login and registration endpoints
-  + src/utils/password.ts
-    Password hashing utilities
 
 (dry run - no changes made)
+
+# 2. Generate implementation
+$ git gen branch "add user authentication"
+
+→ Planning: add user authentication
+→ Branch: feature/user-auth
+→ Generating files...
+  + src/middleware/auth.ts
+  + src/routes/auth.ts
+
+✓ Created 2 files
+
+# 3. Add more to same branch
+$ git gen branch -n feature/user-auth "add password reset"
+
+→ Planning: add password reset
+→ Branch: feature/user-auth
+→ Generating files...
+  + src/routes/reset-password.ts
+  + src/email/password-reset.ts
+
+✓ Created 2 files
+
+# 4. Continue with git
+$ git add .
+$ git commit -m "feat: add user auth with password reset"
+$ git push -u origin feature/user-auth
 ```
 
 ## Spec Format
