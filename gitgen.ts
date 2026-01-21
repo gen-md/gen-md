@@ -7,6 +7,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { dirname, resolve, relative, join, basename } from "node:path";
 import { existsSync } from "node:fs";
 import { execSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import Anthropic from "@anthropic-ai/sdk";
 import matter from "gray-matter";
 
@@ -28,6 +29,38 @@ interface ParsedSpec {
 
 const DEFAULT_MODEL = "claude-sonnet-4-20250514";
 const MAX_TOKENS = 8192;
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROMPTS_DIR = join(__dirname, "prompts");
+
+// === PROMPTS ===
+
+async function loadPrompt(name: string): Promise<string> {
+  const promptPath = join(PROMPTS_DIR, `${name}.md`);
+  return readFile(promptPath, "utf-8");
+}
+
+function renderPrompt(
+  template: string,
+  vars: Record<string, string | undefined>
+): string {
+  let result = template;
+
+  // Handle conditionals: {{#var}}content{{/var}}
+  for (const [key, value] of Object.entries(vars)) {
+    const conditionalPattern = new RegExp(
+      `\\{\\{#${key}\\}\\}([\\s\\S]*?)\\{\\{/${key}\\}\\}`,
+      "g"
+    );
+    result = result.replace(conditionalPattern, value ? "$1" : "");
+  }
+
+  // Handle simple substitutions: {{var}}
+  for (const [key, value] of Object.entries(vars)) {
+    result = result.replaceAll(`{{${key}}}`, value || "");
+  }
+
+  return result.trim();
+}
 
 // === PARSE ===
 
@@ -95,28 +128,12 @@ function getGitHistory(file: string, limit = 10): string {
   return diffs.join("\n\n");
 }
 
-// === GENERATE ===
+// === LLM ===
 
-async function generate(parsed: ParsedSpec): Promise<string> {
+async function llm(prompt: string, model = DEFAULT_MODEL): Promise<string> {
   const client = new Anthropic();
-  const specDir = dirname(parsed.filePath);
-
-  let contextSection = "";
-  if (parsed.spec.context?.length) {
-    const context = await readContext(parsed.spec.context, specDir);
-    contextSection = `\n<context>\n${context}\n</context>\n`;
-  }
-
-  const prompt = `You are a file generator. Generate the content for: ${parsed.spec.output}
-${contextSection}
-<instructions>
-${parsed.body}
-</instructions>
-
-Generate ONLY the file content. No explanations, no markdown code fences.`;
-
   const response = await client.messages.create({
-    model: parsed.spec.model || DEFAULT_MODEL,
+    model,
     max_tokens: MAX_TOKENS,
     messages: [{ role: "user", content: prompt }],
   });
@@ -129,85 +146,65 @@ Generate ONLY the file content. No explanations, no markdown code fences.`;
   return stripCodeFences(content);
 }
 
+function stripCodeFences(content: string): string {
+  const fencePattern = /^```[\w]*\n([\s\S]*?)\n```$/;
+  const match = content.trim().match(fencePattern);
+  return match ? match[1] : content;
+}
+
+// === GENERATE ===
+
+async function generate(parsed: ParsedSpec): Promise<string> {
+  const specDir = dirname(parsed.filePath);
+  const template = await loadPrompt("generate");
+
+  let contextSection = "";
+  if (parsed.spec.context?.length) {
+    contextSection = await readContext(parsed.spec.context, specDir);
+  }
+
+  const prompt = renderPrompt(template, {
+    output: parsed.spec.output,
+    context: contextSection,
+    instructions: parsed.body,
+  });
+
+  return llm(prompt, parsed.spec.model);
+}
+
 async function generateSpec(filePath: string): Promise<string> {
-  const client = new Anthropic();
+  const template = await loadPrompt("init");
   const fileName = basename(filePath);
   const fileContent = await readFile(filePath, "utf-8");
   const history = getGitHistory(filePath);
 
-  const prompt = `Analyze this file and its git history to create a .gitgen.md spec that could regenerate it.
-
-<file path="${filePath}">
-${fileContent}
-</file>
-
-${history ? `<git-history>\n${history}\n</git-history>` : ""}
-
-Create a .gitgen.md spec with:
-1. YAML frontmatter with output: ${fileName} and relevant context files
-2. Clear instructions that capture what this file should contain
-3. Any patterns or rules evident from the git history
-
-Output ONLY the .gitgen.md content, starting with ---.`;
-
-  const response = await client.messages.create({
-    model: DEFAULT_MODEL,
-    max_tokens: MAX_TOKENS,
-    messages: [{ role: "user", content: prompt }],
+  const prompt = renderPrompt(template, {
+    filePath,
+    fileName,
+    fileContent,
+    history,
   });
 
-  const content = response.content
-    .filter((block): block is Anthropic.TextBlock => block.type === "text")
-    .map((block) => block.text)
-    .join("\n");
-
-  return stripCodeFences(content);
+  return llm(prompt);
 }
 
 async function generateBranch(feature: string): Promise<string[]> {
-  const client = new Anthropic();
+  const planTemplate = await loadPrompt("branch-plan");
+  const fileTemplate = await loadPrompt("branch-file");
 
-  // Get repo context
   const recentCommits = git("log -20 --pretty=format:'%h %s'");
   const files = git("ls-files").split("\n").slice(0, 50).join("\n");
 
-  const prompt = `You are implementing a feature in a git repository.
-
-<feature>${feature}</feature>
-
-<recent-commits>
-${recentCommits}
-</recent-commits>
-
-<files>
-${files}
-</files>
-
-Plan the implementation:
-1. List each file to create or modify
-2. For each file, describe what changes are needed
-
-Output as JSON:
-{
-  "branch": "feature/short-name",
-  "files": [
-    {"path": "src/file.ts", "action": "create|modify", "description": "what to do"}
-  ]
-}`;
-
-  const response = await client.messages.create({
-    model: DEFAULT_MODEL,
-    max_tokens: MAX_TOKENS,
-    messages: [{ role: "user", content: prompt }],
+  const planPrompt = renderPrompt(planTemplate, {
+    feature,
+    recentCommits,
+    files,
   });
 
-  const content = response.content
-    .filter((block): block is Anthropic.TextBlock => block.type === "text")
-    .map((block) => block.text)
-    .join("\n");
+  const planResponse = await llm(planPrompt);
 
   // Parse JSON response
-  const jsonMatch = content.match(/\{[\s\S]*\}/);
+  const jsonMatch = planResponse.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("Failed to parse implementation plan");
 
   const plan = JSON.parse(jsonMatch[0]) as {
@@ -225,29 +222,19 @@ Output as JSON:
   for (const file of plan.files) {
     console.log(`Generating ${file.path}...`);
 
-    let existingContent = "";
+    let existing = "";
     if (file.action === "modify" && existsSync(file.path)) {
-      existingContent = await readFile(file.path, "utf-8");
+      existing = await readFile(file.path, "utf-8");
     }
 
-    const filePrompt = `Generate the content for: ${file.path}
-
-<feature>${feature}</feature>
-<task>${file.description}</task>
-${existingContent ? `<existing>\n${existingContent}\n</existing>` : ""}
-
-Generate ONLY the file content. No explanations, no markdown code fences.`;
-
-    const fileResponse = await client.messages.create({
-      model: DEFAULT_MODEL,
-      max_tokens: MAX_TOKENS,
-      messages: [{ role: "user", content: filePrompt }],
+    const filePrompt = renderPrompt(fileTemplate, {
+      filePath: file.path,
+      feature,
+      task: file.description,
+      existing,
     });
 
-    const fileContent = fileResponse.content
-      .filter((block): block is Anthropic.TextBlock => block.type === "text")
-      .map((block) => block.text)
-      .join("\n");
+    const fileContent = await llm(filePrompt);
 
     // Ensure directory exists
     const dir = dirname(file.path);
@@ -255,17 +242,11 @@ Generate ONLY the file content. No explanations, no markdown code fences.`;
       execSync(`mkdir -p "${dir}"`);
     }
 
-    await writeFile(file.path, stripCodeFences(fileContent), "utf-8");
+    await writeFile(file.path, fileContent, "utf-8");
     createdFiles.push(file.path);
   }
 
   return createdFiles;
-}
-
-function stripCodeFences(content: string): string {
-  const fencePattern = /^```[\w]*\n([\s\S]*?)\n```$/;
-  const match = content.trim().match(fencePattern);
-  return match ? match[1] : content;
 }
 
 // === DIFF ===
@@ -353,7 +334,6 @@ async function main(): Promise<void> {
 
   try {
     if (command === "init") {
-      // Generate spec from existing file
       const filePath = args[1];
       if (!filePath) {
         console.error("Error: No file provided");
@@ -370,7 +350,6 @@ async function main(): Promise<void> {
       await writeFile(specPath, spec, "utf-8");
       console.log(`Wrote ${specPath}`);
     } else if (command === "branch") {
-      // Generate feature branch
       const feature = args.slice(1).join(" ");
       if (!feature) {
         console.error("Error: No feature description provided");
@@ -382,7 +361,6 @@ async function main(): Promise<void> {
       console.log(`\nCreated ${files.length} files:`);
       files.forEach((f) => console.log(`  ${f}`));
     } else if (command === "diff") {
-      // Preview generation
       const pathArg = args[1];
       if (!pathArg) {
         console.error("Error: No path provided");
@@ -408,7 +386,6 @@ async function main(): Promise<void> {
       }
       showDiff(existing, generated, relative(process.cwd(), outputPath));
     } else {
-      // Default: generate from spec
       const specPath = resolveSpecPath(command);
       const content = await readFile(specPath, "utf-8");
       const parsed = parseSpec(content, specPath);
