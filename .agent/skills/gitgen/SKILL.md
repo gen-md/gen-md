@@ -1,6 +1,6 @@
 # git gen
 
-Predictive git. Generate specs from git history, and generate new branches for feature implementations.
+Predictive git. Generate files for features, or generate from specs.
 
 ## Philosophy
 
@@ -10,39 +10,23 @@ Predictive git. Generate specs from git history, and generate new branches for f
 └──────────────────────────────────────────────────────────────┘
 ```
 
-## Three Workflows
-
-```
-SPEC → FILE              FILE → SPEC              FEATURE → BRANCH
-
-.gitgen.md               README.md                "add dark mode"
-    │                        │                          │
-    ▼                        ▼                          ▼
- git gen .              git gen init             git gen branch
-    │                        │                          │
-    ▼                        ▼                          ▼
-README.md               README.gitgen.md         feature/dark-mode
-                                                 + generated files
-```
-
 ## Commands
 
 ```bash
-git gen .                      # Generate from .gitgen.md in current directory
-git gen <dir>                  # Generate from .gitgen.md in directory
-git gen <spec.gitgen.md>       # Generate from specific spec file
-git gen diff <dir|spec>        # Preview changes without writing
-git gen init <file>            # Create .gitgen.md spec from existing file
-git gen branch <feature>       # Create branch with feature implementation
+git gen "feature"              # Generate files for a feature
+git gen -b <branch> "feature"  # Create branch, then generate
+git gen .                      # Generate from .gitgen.md spec
+git gen diff .                 # Preview spec generation
+git gen init <file>            # Create spec from existing file
 ```
 
 ## Example: Adding Dark Mode
 
 ```bash
-$ git gen branch "add dark mode"
+$ git gen -b feature/dark-mode "add dark mode"
 
 → Planning: add dark mode
-→ Branch: feature/dark-mode
+→ Branch: feature/dark-mode (new)
 → Generating files...
   + src/contexts/ThemeContext.tsx
   + src/hooks/useTheme.ts
@@ -51,57 +35,53 @@ $ git gen branch "add dark mode"
 ✓ Created 3 files
 ```
 
-### Branch Options
+### Options
 
 ```bash
-git gen branch "add dark mode"              # LLM picks branch name
-git gen branch -n feature/auth "add auth"   # Specify branch name
-git gen branch --dry-run "add dark mode"    # Preview plan only
-git gen branch --no-checkout "add feature"  # Create branch, stay on current
+git gen -b feature/auth "add auth"   # Create branch + generate
+git gen "add more features"          # Generate on current branch
+git gen --dry-run "add api"          # Preview plan only
 ```
 
 ### Iterative Session
 
+Generate on a branch, then keep adding:
+
 ```bash
-# 1. Preview the plan
-$ git gen branch --dry-run "add user authentication"
+# 1. Create branch and generate
+$ git gen -b feature/auth "add user authentication"
 
 → Planning: add user authentication
-→ Branch: feature/user-auth
-→ Files to generate:
-  + src/middleware/auth.ts
-    JWT authentication middleware
-  + src/routes/auth.ts
-    Login and registration endpoints
-
-(dry run - no changes made)
-
-# 2. Generate implementation
-$ git gen branch "add user authentication"
-
-→ Planning: add user authentication
-→ Branch: feature/user-auth
+→ Branch: feature/auth (new)
 → Generating files...
   + src/middleware/auth.ts
   + src/routes/auth.ts
 
 ✓ Created 2 files
 
-# 3. Add more to same branch
-$ git gen branch -n feature/user-auth "add password reset"
+# 2. Add more (no -b needed, uses current branch)
+$ git gen "add password reset"
 
 → Planning: add password reset
-→ Branch: feature/user-auth
 → Generating files...
   + src/routes/reset-password.ts
   + src/email/password-reset.ts
 
 ✓ Created 2 files
 
+# 3. Add more
+$ git gen "add email verification"
+
+→ Planning: add email verification
+→ Generating files...
+  + src/services/email-verification.ts
+
+✓ Created 1 file
+
 # 4. Continue with git
 $ git add .
-$ git commit -m "feat: add user auth with password reset"
-$ git push -u origin feature/user-auth
+$ git commit -m "feat: add user auth with password reset and email verification"
+$ git push -u origin feature/auth
 ```
 
 ## Spec Format

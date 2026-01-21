@@ -17,10 +17,10 @@ Git automatically discovers `git-gen` in PATH and runs it as `git gen`.
 ## Quick Start
 
 ```bash
-$ git gen branch "add dark mode"
+$ git gen -b feature/dark-mode "add dark mode"
 
 → Planning: add dark mode
-→ Branch: feature/dark-mode
+→ Branch: feature/dark-mode (new)
 → Generating files...
   + src/contexts/ThemeContext.tsx
   + src/hooks/useTheme.ts
@@ -29,46 +29,31 @@ $ git gen branch "add dark mode"
 ✓ Created 3 files
 ```
 
-## Workflows
-
-```
-SPEC → FILE              FILE → SPEC              FEATURE → BRANCH
-
-.gitgen.md               README.md                "add dark mode"
-    │                        │                          │
-    ▼                        ▼                          ▼
- git gen .              git gen init             git gen branch
-    │                        │                          │
-    ▼                        ▼                          ▼
-README.md               README.gitgen.md         feature/dark-mode
-                                                 + generated files
-```
-
 ## Commands
 
 | Command | Description |
 |---------|-------------|
-| `git gen .` | Generate from `.gitgen.md` in current directory |
-| `git gen diff .` | Preview changes without writing |
-| `git gen init <file>` | Create spec from file + git history |
-| `git gen branch <feature>` | Create branch with implementation |
+| `git gen "feature"` | Generate files for a feature |
+| `git gen -b <branch> "feature"` | Create branch, then generate |
+| `git gen .` | Generate from `.gitgen.md` spec |
+| `git gen diff .` | Preview spec generation |
+| `git gen init <file>` | Create spec from existing file |
 
-### Branch Options
+### Options
 
 ```bash
-git gen branch "add dark mode"              # LLM picks branch name
-git gen branch -n feature/auth "add auth"   # Specify branch name
-git gen branch --dry-run "add dark mode"    # Preview plan only
-git gen branch --no-checkout "add feature"  # Create branch, stay on current
+git gen -b feature/auth "add auth"   # Create branch + generate
+git gen "add more features"          # Generate on current branch
+git gen --dry-run "add api"          # Preview plan only
 ```
 
 ### Iterative Session
 
 ```bash
-git gen branch --dry-run "add auth"         # 1. Preview plan
-git gen branch "add auth"                   # 2. Generate
-git gen branch -n feature/auth "add reset"  # 3. Add more to same branch
-git add . && git commit && git push         # 4. Continue with git
+git gen -b feature/auth "add auth"   # 1. Create branch + generate
+git gen "add password reset"         # 2. Add more (current branch)
+git gen "add email verification"     # 3. Add more
+git add . && git commit && git push  # 4. Continue with git
 ```
 
 ## Spec Format
