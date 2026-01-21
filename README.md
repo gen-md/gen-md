@@ -1,46 +1,44 @@
 # gitgen
 
-Predictive git. Generate specs from git history, and generate new branches for feature implementations.
+Predictive git.
 
 ```
 git manages what IS.
 gitgen manages what SHOULD BE.
 ```
 
-## What is gitgen?
-
-gitgen bridges git and LLM in both directions:
-- **Spec → File**: Generate files from `.gitgen.md` specs
-- **File → Spec**: Generate specs from existing files (learning from git history)
-- **Feature → Branch**: Generate entire feature branches from descriptions
+## Quick Start
 
 ```bash
-gitgen .                      # Generate from .gitgen.md
-gitgen init README.md         # Create spec from existing file
-gitgen branch "add dark mode" # Create feature branch
+# Generate file from spec
+gitgen .
+
+# Create spec from existing file (learns from git history)
+gitgen init README.md
+
+# Generate feature branch with implementation
+gitgen branch "add dark mode"
 ```
 
-## Installation
+## Install
 
 ```bash
 npm install -g gitgen
+export ANTHROPIC_API_KEY=sk-...
 ```
-
-Requires `ANTHROPIC_API_KEY` environment variable.
 
 ## Commands
 
-```bash
-gitgen .                      # Generate from .gitgen.md in current dir
-gitgen <dir>                  # Generate from .gitgen.md in directory
-gitgen <spec.gitgen.md>       # Generate from specific spec file
-gitgen diff <dir|spec>        # Preview changes
-gitgen init <file>            # Create .gitgen.md spec from existing file
-gitgen branch <feature>       # Create branch with feature implementation
-gitgen --help                 # Show help
-```
+| Command | Description |
+|---------|-------------|
+| `gitgen .` | Generate from `.gitgen.md` in current directory |
+| `gitgen <dir>` | Generate from `.gitgen.md` in directory |
+| `gitgen <spec>` | Generate from specific spec file |
+| `gitgen diff <path>` | Preview changes without writing |
+| `gitgen init <file>` | Create spec from existing file |
+| `gitgen branch <feature>` | Create branch with implementation |
 
-## The Spec Format
+## Spec Format
 
 ```yaml
 ---
@@ -48,32 +46,34 @@ output: README.md
 context:
   - ./package.json
   - ./src/index.ts
-model: claude-sonnet-4-20250514
 ---
 
-Generate a README with:
-- Project overview
-- Installation steps
-- Usage examples
+Generate a README with project overview and usage.
 ```
 
 **Fields:**
-- `output` (required): Target file path
-- `context`: Files to include as context
-- `model`: Claude model to use (default: claude-sonnet-4-20250514)
+- `output` — Target file path (required)
+- `context` — Files to include as context
+- `model` — Claude model (default: claude-sonnet-4-20250514)
 
-## Examples
+## How It Works
 
-See [examples/](examples/) for a complete example.
+**Spec → File** (`gitgen .`)
+1. Parse `.gitgen.md` frontmatter + body
+2. Read context files
+3. Send to Claude
+4. Write output
 
-## Philosophy
+**File → Spec** (`gitgen init`)
+1. Read existing file
+2. Analyze git history
+3. Generate spec that recreates the file
 
-gitgen is intentionally minimal:
-- Single TypeScript file (~400 lines)
-- No config files or directories
-- Git tracks history (no need for `.gitgen/`)
-- One provider (Anthropic Claude)
-- Unix philosophy: do one thing well
+**Feature → Branch** (`gitgen branch`)
+1. Analyze repo structure
+2. Plan implementation
+3. Create branch
+4. Generate files
 
 ## License
 
