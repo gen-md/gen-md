@@ -214,13 +214,13 @@ async function generateBranch(feature: string): Promise<string[]> {
 
   // Create branch
   git(`checkout -b ${plan.branch}`);
-  console.log(`Created branch: ${plan.branch}`);
+  console.log(`→ Branch: ${plan.branch}`);
+  console.log(`→ Generating files...`);
 
   const createdFiles: string[] = [];
 
   // Generate each file
   for (const file of plan.files) {
-    console.log(`Generating ${file.path}...`);
 
     let existing = "";
     if (file.action === "modify" && existsSync(file.path)) {
@@ -244,6 +244,7 @@ async function generateBranch(feature: string): Promise<string[]> {
 
     await writeFile(file.path, fileContent, "utf-8");
     createdFiles.push(file.path);
+    console.log(`  + ${file.path}`);
   }
 
   return createdFiles;
@@ -344,11 +345,12 @@ async function main(): Promise<void> {
         process.exit(1);
       }
 
-      console.log(`Analyzing ${filePath}...`);
+      console.log(`→ Analyzing: ${filePath}`);
+      console.log(`→ Reading git history...`);
       const spec = await generateSpec(filePath);
       const specPath = filePath.replace(/(\.[^.]+)?$/, ".gitgen.md");
       await writeFile(specPath, spec, "utf-8");
-      console.log(`Wrote ${specPath}`);
+      console.log(`✓ Wrote ${specPath}`);
     } else if (command === "branch") {
       const feature = args.slice(1).join(" ");
       if (!feature) {
@@ -356,10 +358,9 @@ async function main(): Promise<void> {
         process.exit(1);
       }
 
-      console.log(`Planning implementation for: ${feature}`);
+      console.log(`→ Planning: ${feature}`);
       const files = await generateBranch(feature);
-      console.log(`\nCreated ${files.length} files:`);
-      files.forEach((f) => console.log(`  ${f}`));
+      console.log(`\n✓ Created ${files.length} files`);
     } else if (command === "diff") {
       const pathArg = args[1];
       if (!pathArg) {
@@ -375,14 +376,14 @@ async function main(): Promise<void> {
         ? parsed.spec.output
         : resolve(specDir, parsed.spec.output);
 
-      console.log(`Generating ${relative(process.cwd(), outputPath)}...`);
+      console.log(`→ Generating: ${relative(process.cwd(), outputPath)}`);
       const generated = await generate(parsed);
 
       let existing = "";
       try {
         existing = await readFile(outputPath, "utf-8");
       } catch {
-        console.log(`(new file)`);
+        console.log(`  (new file)`);
       }
       showDiff(existing, generated, relative(process.cwd(), outputPath));
     } else {
@@ -394,10 +395,10 @@ async function main(): Promise<void> {
         ? parsed.spec.output
         : resolve(specDir, parsed.spec.output);
 
-      console.log(`Generating ${relative(process.cwd(), outputPath)}...`);
+      console.log(`→ Generating: ${relative(process.cwd(), outputPath)}`);
       const generated = await generate(parsed);
       await writeFile(outputPath, generated, "utf-8");
-      console.log(`Wrote ${relative(process.cwd(), outputPath)}`);
+      console.log(`✓ Wrote ${relative(process.cwd(), outputPath)}`);
     }
   } catch (error) {
     console.error(`Error: ${(error as Error).message}`);

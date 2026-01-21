@@ -5,14 +5,29 @@ Predictive git. Generate specs from git history, and generate new branches for f
 ## Philosophy
 
 ```
-git manages what IS.
-gitgen explores EVERYTHING ELSE.
+┌──────────────────────────────────────────────────────────────┐
+│  git manages what IS.     gitgen explores EVERYTHING ELSE.   │
+└──────────────────────────────────────────────────────────────┘
 ```
 
-gitgen bridges git and LLM in both directions:
-- **Spec → File**: Generate files from `.gitgen.md` specs
-- **File → Spec**: Generate specs from existing files (learning from git history)
-- **Feature → Branch**: Generate entire feature branches from descriptions
+## Three Workflows
+
+```
+SPEC → FILE              FILE → SPEC              FEATURE → BRANCH
+───────────              ───────────              ─────────────────
+
+.gitgen.md               README.md                "add dark mode"
+    │                        │                          │
+    ▼                        ▼                          ▼
+┌───────┐               ┌────────┐                ┌──────────┐
+│gitgen │               │ gitgen │                │  gitgen  │
+│   .   │               │  init  │                │  branch  │
+└───────┘               └────────┘                └──────────┘
+    │                        │                          │
+    ▼                        ▼                          ▼
+README.md               .gitgen.md               feature/dark-mode
+                                                 + generated files
+```
 
 ## Commands
 
@@ -23,7 +38,22 @@ gitgen <spec.gitgen.md>       # Generate from specific spec file
 gitgen diff <dir|spec>        # Preview changes without writing
 gitgen init <file>            # Create .gitgen.md spec from existing file
 gitgen branch <feature>       # Create branch with feature implementation
-gitgen --help                 # Show help
+```
+
+## Example: Adding Dark Mode
+
+```bash
+$ gitgen branch "add dark mode"
+
+→ Planning: add dark mode
+→ Branch: feature/dark-mode
+→ Generating files...
+  + src/contexts/ThemeContext.tsx
+  + src/hooks/useTheme.ts
+  + src/components/ThemeToggle.tsx
+  + src/styles/themes.css
+
+✓ Created 4 files
 ```
 
 ## Spec Format
@@ -53,21 +83,25 @@ Generate a README with:
 | `context` | No | Files to include as context for generation |
 | `model` | No | Claude model (default: claude-sonnet-4-20250514) |
 
-## Workflows
+## Workflow Details
 
 ### Generate from spec
 
 ```bash
-gitgen .                      # Use .gitgen.md in current dir
-gitgen src/                   # Use src/.gitgen.md
-gitgen README.gitgen.md       # Use specific spec file
+$ gitgen .
+
+→ Generating: README.md
+✓ Wrote README.md
 ```
 
 ### Create spec from existing file
 
 ```bash
-gitgen init README.md         # Creates README.gitgen.md
-gitgen init src/config.ts     # Creates src/config.gitgen.md
+$ gitgen init README.md
+
+→ Analyzing: README.md
+→ Reading git history...
+✓ Wrote README.gitgen.md
 ```
 
 The `init` command:
@@ -75,25 +109,14 @@ The `init` command:
 2. Analyzes git history for patterns
 3. Generates a .gitgen.md spec that could recreate the file
 
-### Generate feature branch
-
-```bash
-gitgen branch "add user authentication"
-gitgen branch "implement dark mode toggle"
-gitgen branch "add REST API for products"
-```
-
-The `branch` command:
-1. Analyzes repo structure and recent commits
-2. Plans which files to create/modify
-3. Creates a new git branch
-4. Generates all files with implementation
-
 ### Preview before generating
 
 ```bash
-gitgen diff .
-gitgen diff README.gitgen.md
+$ gitgen diff .
+
+→ Generating: README.md
+--- README.md (current)
++++ README.md (generated)
 ```
 
 ## Context Files
@@ -108,41 +131,3 @@ Paths are relative to the spec file location.
 ## Environment
 
 Requires `ANTHROPIC_API_KEY` environment variable.
-
-## Examples
-
-### README from package.json
-
-```yaml
----
-output: README.md
-context:
-  - ./package.json
----
-Generate a README with project name, description, installation, and usage.
-```
-
-### API docs from source
-
-```yaml
----
-output: API.md
-context:
-  - ./src/api.ts
-  - ./src/types.ts
----
-Generate API documentation from the source code.
-Include all exported functions with their parameters and return types.
-```
-
-### Config file generation
-
-```yaml
----
-output: tsconfig.json
-context:
-  - ./package.json
----
-Generate a tsconfig.json appropriate for this Node.js project.
-Use strict mode and ES modules.
-```
