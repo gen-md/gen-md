@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * gen-md CLI
+ * gitgen CLI
  *
- * Git-like MCP for predictive version control using .gen.md specs.
+ * Git-like MCP for predictive version control using .gitgen.md specs.
  */
 
 import { Command } from "commander";
@@ -26,8 +26,8 @@ import { findGenMdRoot } from "./core/store.js";
 const program = new Command();
 
 program
-  .name("gen-md")
-  .description("Git-like MCP for predictive version control using .gen.md specs")
+  .name("gitgen")
+  .description("Git-like MCP for predictive version control using .gitgen.md specs")
   .version("0.1.0");
 
 // ============================================================================
@@ -35,7 +35,7 @@ program
 // ============================================================================
 program
   .command("init")
-  .description("Initialize a gen-md repository")
+  .description("Initialize a gitgen repository")
   .argument("[path]", "Directory to initialize", ".")
   .action(async (path: string) => {
     try {
@@ -51,7 +51,7 @@ program
 // ============================================================================
 program
   .command("status")
-  .description("Show status of .gen.md specs")
+  .description("Show status of .gitgen.md specs")
   .option("-p, --path <path>", "Path to check", ".")
   .option("--json", "Output as JSON")
   .action(async (options: { path: string; json: boolean }) => {
@@ -76,7 +76,7 @@ program
 program
   .command("diff")
   .description("Show difference between current file and predicted content")
-  .argument("<spec>", "Path to .gen.md spec")
+  .argument("<spec>", "Path to .gitgen.md spec")
   .option("--cached", "Show staged prediction (skip regeneration)")
   .option("--git", "Include git context in prediction")
   .option("--dry-run", "Show what would be generated without API call")
@@ -118,7 +118,7 @@ program
 // ============================================================================
 program
   .command("add")
-  .description("Create a .gen.md spec for a file or stage an existing spec")
+  .description("Create a .gitgen.md spec for a file or stage an existing spec")
   .argument("<file>", "File to create spec for, or spec to stage")
   .option("-d, --description <desc>", "Description for generated content")
   .option("-n, --name <name>", "Name for the generator")
@@ -188,7 +188,7 @@ program
 // ============================================================================
 program
   .command("watch")
-  .description("Watch .gen.md files and auto-regenerate on change")
+  .description("Watch .gitgen.md files and auto-regenerate on change")
   .option("-p, --path <path>", "Path to watch", ".")
   .option("--git", "Include git context in predictions")
   .option("--debounce <ms>", "Debounce time in ms", "500")
@@ -219,8 +219,8 @@ program
 // ============================================================================
 program
   .command("cascade")
-  .description("Show the cascade chain for a .gen.md spec")
-  .argument("<spec>", "Path to .gen.md spec")
+  .description("Show the cascade chain for a .gitgen.md spec")
+  .argument("<spec>", "Path to .gitgen.md spec")
   .option("--full", "Show full content of each file")
   .option("--json", "Output as JSON")
   .action(
@@ -254,7 +254,7 @@ program
 // ============================================================================
 program
   .command("validate")
-  .description("Validate .gen.md specs without making API calls")
+  .description("Validate .gitgen.md specs without making API calls")
   .argument("[path]", "Path to validate (spec or directory)", ".")
   .option("--json", "Output as JSON")
   .action(

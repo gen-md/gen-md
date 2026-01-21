@@ -20,7 +20,7 @@ import type { FileDiff, PredictedContent } from "../types.js";
  * Options for diff command
  */
 export interface DiffOptions {
-  /** Path to the .gen.md spec */
+  /** Path to the .gitgen.md spec */
   spec: string;
   /** Show staged predictions (skip regeneration) */
   cached?: boolean;
@@ -52,11 +52,11 @@ export interface DiffResult {
 export async function diffCommand(options: DiffOptions): Promise<DiffResult> {
   const specPath = resolve(options.spec);
 
-  // Find gen-md root
+  // Find gitgen root
   const root = await findGenMdRoot(dirname(specPath));
   if (!root) {
     throw new Error(
-      "Not a gen-md repository. Run 'gen-md init' to initialize."
+      "Not a gitgen repository. Run 'gitgen init' to initialize."
     );
   }
 

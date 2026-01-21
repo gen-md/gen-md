@@ -1,7 +1,7 @@
 /**
  * Validate Command
  *
- * Validates .gen.md specs without making API calls.
+ * Validates .gitgen.md specs without making API calls.
  * Checks for common issues like missing context files, invalid frontmatter, etc.
  */
 
@@ -64,11 +64,11 @@ export async function validateCommand(
 ): Promise<ValidateResult> {
   const targetPath = resolve(options.path || process.cwd());
 
-  // Find gen-md root
+  // Find gitgen root
   const root = await findGenMdRoot(targetPath);
   if (!root) {
     throw new Error(
-      "Not a gen-md repository. Run 'gen-md init' to initialize."
+      "Not a gitgen repository. Run 'gitgen init' to initialize."
     );
   }
 
@@ -83,10 +83,10 @@ export async function validateCommand(
     const targetStat = await stat(targetPath);
     if (targetStat.isDirectory()) {
       specPaths = await store.findAllSpecs();
-    } else if (targetPath.endsWith(".gen.md")) {
+    } else if (targetPath.endsWith(".gitgen.md")) {
       specPaths = [targetPath];
     } else {
-      throw new Error(`${targetPath} is not a .gen.md file or directory`);
+      throw new Error(`${targetPath} is not a .gitgen.md file or directory`);
     }
   } catch {
     specPaths = await store.findAllSpecs();

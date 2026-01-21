@@ -1,7 +1,7 @@
 /**
  * Watch Command
  *
- * Watches .gen.md files for changes and automatically regenerates output.
+ * Watches .gitgen.md files for changes and automatically regenerates output.
  * Like having a live development server for your AI-generated content.
  */
 
@@ -48,11 +48,11 @@ export async function watchCommand(options: WatchOptions = {}): Promise<void> {
   const targetPath = resolve(options.path || process.cwd());
   const debounceMs = options.debounce ?? 500;
 
-  // Find gen-md root
+  // Find gitgen root
   const maybeRoot = await findGenMdRoot(targetPath);
   if (!maybeRoot) {
     throw new Error(
-      "Not a gen-md repository. Run 'gen-md init' to initialize."
+      "Not a gitgen repository. Run 'gitgen init' to initialize."
     );
   }
   const root: string = maybeRoot;
@@ -63,7 +63,7 @@ export async function watchCommand(options: WatchOptions = {}): Promise<void> {
   const predictor = createPredictor();
   const gitExtractor = createGitExtractor();
 
-  console.log(chalk.cyan(`\n👁️  Watching for .gen.md changes in ${chalk.bold(root)}\n`));
+  console.log(chalk.cyan(`\n👁️  Watching for .gitgen.md changes in ${chalk.bold(root)}\n`));
 
   // Track pending regenerations to debounce
   const pending = new Map<string, NodeJS.Timeout>();
@@ -173,8 +173,8 @@ export async function watchCommand(options: WatchOptions = {}): Promise<void> {
 
     const fullPath = resolve(root, filename);
 
-    // Check if it's a .gen.md file
-    if (filename.endsWith(".gen.md")) {
+    // Check if it's a .gitgen.md file
+    if (filename.endsWith(".gitgen.md")) {
       if (eventType === "change" || eventType === "rename") {
         // Re-resolve in case output path changed
         try {

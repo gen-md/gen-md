@@ -1,14 +1,14 @@
 /**
- * Gen-md Type Definitions
- * Git-like MCP for predictive version control using .gen.md specs
+ * GitGen Type Definitions
+ * Git-like MCP for predictive version control using .gitgen.md specs
  */
 
 // ============================================================================
-// .gen.md File Types
+// .gitgen.md File Types
 // ============================================================================
 
 /**
- * YAML frontmatter fields in a .gen.md file
+ * YAML frontmatter fields in a .gitgen.md file
  */
 export interface GenMdFrontmatter {
   name?: string;
@@ -21,7 +21,7 @@ export interface GenMdFrontmatter {
 }
 
 /**
- * Parsed .gen.md file
+ * Parsed .gitgen.md file
  */
 export interface GenMdFile {
   /** Absolute path to the file */
@@ -61,14 +61,14 @@ export interface ResolvedGenMdConfig {
 }
 
 // ============================================================================
-// Store Types (.gen-md directory)
+// Store Types (.gitgen directory)
 // ============================================================================
 
 /**
  * Staged spec entry in the index
  */
 export interface StagedSpec {
-  /** Path to the .gen.md file */
+  /** Path to the .gitgen.md file */
   specPath: string;
   /** Hash of the spec content when staged */
   specHash: string;
@@ -116,7 +116,7 @@ export interface LogEntry {
 }
 
 /**
- * Configuration in .gen-md/config
+ * Configuration in .gitgen/config
  */
 export interface GenMdConfig {
   /** Default model to use */
@@ -261,7 +261,7 @@ export type SpecStatus =
  * Status entry for a single spec
  */
 export interface SpecStatusEntry {
-  /** Path to the .gen.md file */
+  /** Path to the .gitgen.md file */
   specPath: string;
   /** Path to the output file */
   outputPath: string;
@@ -331,14 +331,14 @@ export interface CommitResult {
 // ============================================================================
 
 /**
- * MCP tool input for gen_md_status
+ * MCP tool input for gitgen_status
  */
 export interface StatusToolInput {
   path?: string;
 }
 
 /**
- * MCP tool input for gen_md_diff
+ * MCP tool input for gitgen_diff
  */
 export interface DiffToolInput {
   spec: string;
@@ -346,7 +346,7 @@ export interface DiffToolInput {
 }
 
 /**
- * MCP tool input for gen_md_add
+ * MCP tool input for gitgen_add
  */
 export interface AddToolInput {
   file?: string;
@@ -355,7 +355,7 @@ export interface AddToolInput {
 }
 
 /**
- * MCP tool input for gen_md_commit
+ * MCP tool input for gitgen_commit
  */
 export interface CommitToolInput {
   message?: string;

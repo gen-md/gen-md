@@ -35,11 +35,11 @@ export interface CommitOptions {
 export async function commitCommand(
   options: CommitOptions = {}
 ): Promise<CommitResult> {
-  // Find gen-md root
+  // Find gitgen root
   const root = await findGenMdRoot(process.cwd());
   if (!root) {
     throw new Error(
-      "Not a gen-md repository. Run 'gen-md init' to initialize."
+      "Not a gitgen repository. Run 'gitgen init' to initialize."
     );
   }
 
@@ -51,7 +51,7 @@ export async function commitCommand(
   // Get staged specs
   const stagedSpecs = await store.getStagedSpecs();
   if (stagedSpecs.length === 0) {
-    throw new Error("Nothing to commit. Use 'gen-md add' to stage specs.");
+    throw new Error("Nothing to commit. Use 'gitgen add' to stage specs.");
   }
 
   const branch = await store.getHead();

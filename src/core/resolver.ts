@@ -1,7 +1,7 @@
 /**
  * Cascading Resolver
  *
- * Walks up the directory tree to find and merge .gen.md configurations.
+ * Walks up the directory tree to find and merge .gitgen.md configurations.
  * Parent configurations cascade down to children.
  */
 
@@ -57,7 +57,7 @@ const DEFAULT_OPTIONS: Required<ResolverOptions> = {
 };
 
 /**
- * Cascading resolver for .gen.md files
+ * Cascading resolver for .gitgen.md files
  */
 export class CascadingResolver {
   private parser: GenMdParser;
@@ -71,7 +71,7 @@ export class CascadingResolver {
   }
 
   /**
-   * Resolve cascade chain for a .gen.md file
+   * Resolve cascade chain for a .gitgen.md file
    */
   async resolve(filePath: string): Promise<ResolvedGenMdConfig> {
     const absolutePath = resolve(filePath);
@@ -92,7 +92,7 @@ export class CascadingResolver {
     const leafDir = dirname(leafPath);
     const stopAt = resolve(this.options.stopAt);
 
-    // Collect .gen.md files from root to leaf
+    // Collect .gitgen.md files from root to leaf
     const configPaths: string[] = [];
     let currentDir = leafDir;
     let depth = 0;
@@ -104,8 +104,8 @@ export class CascadingResolver {
       }
       this.visited.add(currentDir);
 
-      // Look for .gen.md in current directory
-      const genMdPath = join(currentDir, ".gen.md");
+      // Look for .gitgen.md in current directory
+      const genMdPath = join(currentDir, ".gitgen.md");
       if (await this.fileExists(genMdPath)) {
         configPaths.unshift(genMdPath); // Add to front (we're going root-ward)
       }
@@ -119,8 +119,8 @@ export class CascadingResolver {
       depth++;
     }
 
-    // Add the leaf file itself (if it's not a .gen.md directory config)
-    if (!leafPath.endsWith("/.gen.md")) {
+    // Add the leaf file itself (if it's not a .gitgen.md directory config)
+    if (!leafPath.endsWith("/.gitgen.md")) {
       configPaths.push(leafPath);
     }
 
@@ -144,7 +144,7 @@ export class CascadingResolver {
    */
   private mergeChain(chain: GenMdFile[]): ResolvedGenMdConfig {
     if (chain.length === 0) {
-      throw new Error("No .gen.md files found in cascade chain");
+      throw new Error("No .gitgen.md files found in cascade chain");
     }
 
     // Start with empty config

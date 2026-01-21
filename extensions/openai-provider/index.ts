@@ -2,7 +2,7 @@
  * OpenAI Provider Extension
  *
  * Sample extension that adds OpenAI as an LLM provider.
- * Demonstrates how to extend gen-md with custom LLM providers.
+ * Demonstrates how to extend gitgen with custom LLM providers.
  *
  * Usage:
  *   1. Install openai: npm install openai
@@ -94,7 +94,7 @@ class OpenAIProvider implements LLMProvider {
 export const openAIExtension: Extension = {
   name: "openai-provider",
   version: "1.0.0",
-  description: "Adds OpenAI as an LLM provider for gen-md",
+  description: "Adds OpenAI as an LLM provider for gitgen",
 
   activate(registry: ExtensionRegistry): void {
     registry.registerProvider(new OpenAIProvider());

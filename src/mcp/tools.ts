@@ -1,19 +1,19 @@
 /**
  * MCP Tool Definitions
  *
- * Defines the tools exposed by the gen-md MCP server.
+ * Defines the tools exposed by the gitgen MCP server.
  */
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
 
 /**
- * Tool definitions for the gen-md MCP
+ * Tool definitions for the gitgen MCP
  */
 export const tools: Tool[] = [
   {
-    name: "gen_md_status",
+    name: "gitgen_status",
     description:
-      "Show status of .gen.md specs - which need regeneration, which are up to date. Like 'git status'.",
+      "Show status of .gitgen.md specs - which need regeneration, which are up to date. Like 'git status'.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -25,7 +25,7 @@ export const tools: Tool[] = [
     },
   },
   {
-    name: "gen_md_diff",
+    name: "gitgen_diff",
     description:
       "Show difference between current file and predicted content from spec. Calls Anthropic API to generate prediction. Like 'git diff'.",
     inputSchema: {
@@ -33,7 +33,7 @@ export const tools: Tool[] = [
       properties: {
         spec: {
           type: "string",
-          description: "Path to .gen.md file",
+          description: "Path to .gitgen.md file",
         },
         cached: {
           type: "boolean",
@@ -48,9 +48,9 @@ export const tools: Tool[] = [
     },
   },
   {
-    name: "gen_md_add",
+    name: "gitgen_add",
     description:
-      "Create a .gen.md spec for an existing file or stage a spec for commit. Like 'git add'.",
+      "Create a .gitgen.md spec for an existing file or stage a spec for commit. Like 'git add'.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -71,7 +71,7 @@ export const tools: Tool[] = [
     },
   },
   {
-    name: "gen_md_commit",
+    name: "gitgen_commit",
     description:
       "Regenerate all staged specs using Anthropic API and write output files. Like 'git commit'.",
     inputSchema: {
@@ -93,9 +93,9 @@ export const tools: Tool[] = [
     },
   },
   {
-    name: "gen_md_init",
+    name: "gitgen_init",
     description:
-      "Initialize a gen-md repository by creating the .gen-md directory. Like 'git init'.",
+      "Initialize a gitgen repository by creating the .gitgen directory. Like 'git init'.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -107,9 +107,9 @@ export const tools: Tool[] = [
     },
   },
   {
-    name: "gen_md_validate",
+    name: "gitgen_validate",
     description:
-      "Validate .gen.md specs without making API calls. Checks for missing context files, invalid frontmatter, and other issues.",
+      "Validate .gitgen.md specs without making API calls. Checks for missing context files, invalid frontmatter, and other issues.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -121,15 +121,15 @@ export const tools: Tool[] = [
     },
   },
   {
-    name: "gen_md_cascade",
+    name: "gitgen_cascade",
     description:
-      "Show the inheritance chain for a .gen.md spec. Helps debug cascading configuration issues.",
+      "Show the inheritance chain for a .gitgen.md spec. Helps debug cascading configuration issues.",
     inputSchema: {
       type: "object" as const,
       properties: {
         spec: {
           type: "string",
-          description: "Path to .gen.md file",
+          description: "Path to .gitgen.md file",
         },
         full: {
           type: "boolean",

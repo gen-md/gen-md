@@ -1,7 +1,7 @@
 /**
  * Content Predictor
  *
- * Uses Anthropic API to generate predicted content from .gen.md specs.
+ * Uses Anthropic API to generate predicted content from .gitgen.md specs.
  * Loads prompts from external markdown files for easy customization.
  */
 

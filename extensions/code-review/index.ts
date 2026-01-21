@@ -2,7 +2,7 @@
  * Code Review Extension
  *
  * Sample extension that adds code review guidelines to generated content.
- * Demonstrates how to extend gen-md with custom prompt sections and hooks.
+ * Demonstrates how to extend gitgen with custom prompt sections and hooks.
  */
 
 import type {

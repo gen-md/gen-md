@@ -1,7 +1,7 @@
 /**
  * Status Command
  *
- * Shows the status of .gen.md specs - which need regeneration, which are up to date.
+ * Shows the status of .gitgen.md specs - which need regeneration, which are up to date.
  * Like `git status`.
  */
 
@@ -30,11 +30,11 @@ export async function statusCommand(
 ): Promise<StatusResult> {
   const targetPath = resolve(options.path || process.cwd());
 
-  // Find gen-md root
+  // Find gitgen root
   const root = await findGenMdRoot(targetPath);
   if (!root) {
     throw new Error(
-      "Not a gen-md repository. Run 'gen-md init' to initialize."
+      "Not a gitgen repository. Run 'gitgen init' to initialize."
     );
   }
 
@@ -44,7 +44,7 @@ export async function statusCommand(
   // Get current branch
   const branch = await store.getHead();
 
-  // Find all .gen.md files
+  // Find all .gitgen.md files
   const specPaths = await store.findAllSpecs();
 
   // Get staged specs
@@ -126,7 +126,7 @@ export function formatStatus(result: StatusResult, root: string): string {
   const staged = result.specs.filter((s) => s.status === "staged");
   if (staged.length > 0) {
     lines.push(chalk.green("Changes to be committed:"));
-    lines.push(chalk.gray('  (use "gen-md unstage <spec>" to unstage)'));
+    lines.push(chalk.gray('  (use "gitgen unstage <spec>" to unstage)'));
     lines.push("");
     for (const spec of staged) {
       const relSpec = relative(root, spec.specPath);
@@ -140,8 +140,8 @@ export function formatStatus(result: StatusResult, root: string): string {
   const modified = result.specs.filter((s) => s.status === "modified");
   if (modified.length > 0) {
     lines.push(chalk.yellow("Changes not staged for commit:"));
-    lines.push(chalk.gray('  (use "gen-md add <spec>" to stage)'));
-    lines.push(chalk.gray('  (use "gen-md diff <spec>" to see what changed)'));
+    lines.push(chalk.gray('  (use "gitgen add <spec>" to stage)'));
+    lines.push(chalk.gray('  (use "gitgen diff <spec>" to see what changed)'));
     lines.push("");
     for (const spec of modified) {
       const relSpec = relative(root, spec.specPath);
@@ -157,7 +157,7 @@ export function formatStatus(result: StatusResult, root: string): string {
   const missing = result.specs.filter((s) => s.status === "missing");
   if (missing.length > 0) {
     lines.push(chalk.red("Specs with missing outputs:"));
-    lines.push(chalk.gray('  (use "gen-md add <spec>" to stage for generation)'));
+    lines.push(chalk.gray('  (use "gitgen add <spec>" to stage for generation)'));
     lines.push("");
     for (const spec of missing) {
       const relSpec = relative(root, spec.specPath);

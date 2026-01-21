@@ -1,7 +1,7 @@
 /**
- * .gen.md File Parser
+ * .gitgen.md File Parser
  *
- * Parses .gen.md files with YAML frontmatter and extracts one-shot examples.
+ * Parses .gitgen.md files with YAML frontmatter and extracts one-shot examples.
  */
 
 import { readFile } from "node:fs/promises";
@@ -17,11 +17,11 @@ const EXAMPLE_REGEX = /<example>([\s\S]*?)<\/example>/g;
 const EXAMPLE_SEPARATOR = /\n---\n/;
 
 /**
- * Parser for .gen.md files
+ * Parser for .gitgen.md files
  */
 export class GenMdParser {
   /**
-   * Parse a .gen.md file from a path
+   * Parse a .gitgen.md file from a path
    */
   async parse(filePath: string): Promise<GenMdFile> {
     const absolutePath = resolve(filePath);
@@ -30,7 +30,7 @@ export class GenMdParser {
   }
 
   /**
-   * Parse .gen.md content directly
+   * Parse .gitgen.md content directly
    */
   parseContent(content: string, filePath: string): GenMdFile {
     const absolutePath = resolve(filePath);

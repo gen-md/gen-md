@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * gen-md MCP Server
+ * gitgen MCP Server
  *
- * Model Context Protocol server for gen-md tools.
+ * Model Context Protocol server for gitgen tools.
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -47,7 +47,7 @@ import { relative } from "node:path";
 function createServer(): Server {
   const server = new Server(
     {
-      name: "gen-md",
+      name: "gitgen",
       version: "0.1.0",
     },
     {
@@ -63,7 +63,7 @@ function createServer(): Server {
     return { tools };
   });
 
-  // List available resources (all .gen.md specs)
+  // List available resources (all .gitgen.md specs)
   server.setRequestHandler(ListResourcesRequestSchema, async () => {
     try {
       const root = await findGenMdRoot(process.cwd());
@@ -83,7 +83,7 @@ function createServer(): Server {
           const relPath = relative(root, specPath);
 
           resources.push({
-            uri: `gen-md://spec/${relPath}`,
+            uri: `gitgen://spec/${relPath}`,
             name: resolved.frontmatter.name || relPath,
             description: resolved.frontmatter.description || `Spec for ${resolved.frontmatter.output || "unknown"}`,
             mimeType: "text/markdown",
@@ -103,8 +103,8 @@ function createServer(): Server {
   server.setRequestHandler(ReadResourceRequestSchema, async (request) => {
     const { uri } = request.params;
 
-    // Parse the URI: gen-md://spec/path/to/file.gen.md
-    const match = uri.match(/^gen-md:\/\/spec\/(.+)$/);
+    // Parse the URI: gitgen://spec/path/to/file.gitgen.md
+    const match = uri.match(/^gitgen:\/\/spec\/(.+)$/);
     if (!match) {
       throw new Error(`Invalid resource URI: ${uri}`);
     }
@@ -112,7 +112,7 @@ function createServer(): Server {
     const relPath = match[1];
     const root = await findGenMdRoot(process.cwd());
     if (!root) {
-      throw new Error("Not a gen-md repository");
+      throw new Error("Not a gitgen repository");
     }
 
     const specPath = `${root}/${relPath}`;
@@ -175,7 +175,7 @@ function createServer(): Server {
 
     try {
       switch (name) {
-        case "gen_md_init": {
+        case "gitgen_init": {
           const input = args as GenMdInitInput;
           const result = await initCommand({ path: input.path });
           return {
@@ -188,7 +188,7 @@ function createServer(): Server {
           };
         }
 
-        case "gen_md_status": {
+        case "gitgen_status": {
           const input = args as GenMdStatusInput;
           const result = await statusCommand({ path: input.path });
           const root = await findGenMdRoot(input.path || process.cwd());
@@ -202,7 +202,7 @@ function createServer(): Server {
           };
         }
 
-        case "gen_md_diff": {
+        case "gitgen_diff": {
           const input = args as unknown as GenMdDiffInput;
           const result = await diffCommand({
             spec: input.spec,
@@ -219,7 +219,7 @@ function createServer(): Server {
           };
         }
 
-        case "gen_md_add": {
+        case "gitgen_add": {
           const input = args as unknown as GenMdAddInput;
           const result = await addCommand({
             file: input.file,
@@ -236,7 +236,7 @@ function createServer(): Server {
           };
         }
 
-        case "gen_md_commit": {
+        case "gitgen_commit": {
           const input = args as GenMdCommitInput;
           const result = await commitCommand({
             message: input.message,
@@ -253,7 +253,7 @@ function createServer(): Server {
           };
         }
 
-        case "gen_md_validate": {
+        case "gitgen_validate": {
           const input = args as { path?: string };
           const result = await validateCommand({ path: input.path });
           return {
@@ -266,7 +266,7 @@ function createServer(): Server {
           };
         }
 
-        case "gen_md_cascade": {
+        case "gitgen_cascade": {
           const input = args as { spec: string; full?: boolean };
           const result = await cascadeCommand({
             spec: input.spec,

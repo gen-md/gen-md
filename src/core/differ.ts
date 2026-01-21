@@ -86,13 +86,13 @@ export class Differ {
 
     // Header
     if (diff.isNew) {
-      lines.push(`diff --gen-md a/${diff.path} b/${diff.path}`);
+      lines.push(`diff --gitgen a/${diff.path} b/${diff.path}`);
       lines.push("new file");
     } else if (diff.isDeleted) {
-      lines.push(`diff --gen-md a/${diff.path} b/${diff.path}`);
+      lines.push(`diff --gitgen a/${diff.path} b/${diff.path}`);
       lines.push("deleted file");
     } else {
-      lines.push(`diff --gen-md a/${diff.path} b/${diff.path}`);
+      lines.push(`diff --gitgen a/${diff.path} b/${diff.path}`);
     }
 
     lines.push(`--- a/${diff.path} (current)`);
@@ -121,13 +121,13 @@ export class Differ {
 
     // Header (bold)
     if (diff.isNew) {
-      lines.push(`\x1b[1mdiff --gen-md a/${diff.path} b/${diff.path}\x1b[0m`);
+      lines.push(`\x1b[1mdiff --gitgen a/${diff.path} b/${diff.path}\x1b[0m`);
       lines.push("\x1b[32mnew file\x1b[0m");
     } else if (diff.isDeleted) {
-      lines.push(`\x1b[1mdiff --gen-md a/${diff.path} b/${diff.path}\x1b[0m`);
+      lines.push(`\x1b[1mdiff --gitgen a/${diff.path} b/${diff.path}\x1b[0m`);
       lines.push("\x1b[31mdeleted file\x1b[0m");
     } else {
-      lines.push(`\x1b[1mdiff --gen-md a/${diff.path} b/${diff.path}\x1b[0m`);
+      lines.push(`\x1b[1mdiff --gitgen a/${diff.path} b/${diff.path}\x1b[0m`);
     }
 
     lines.push(`\x1b[1m--- a/${diff.path}\x1b[0m (current)`);

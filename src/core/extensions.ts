@@ -1,7 +1,7 @@
 /**
  * Extensions System
  *
- * Provides extensibility points for gen-md:
+ * Provides extensibility points for gitgen:
  * - Custom LLM providers
  * - Custom prompt sections
  * - Pre/post processing hooks

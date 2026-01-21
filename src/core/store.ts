@@ -1,7 +1,7 @@
 /**
- * Gen-md Store
+ * GitGen Store
  *
- * Manages the .gen-md directory structure (like .git).
+ * Manages the .gitgen directory structure (like .git).
  * Provides content-addressed storage for predictions and state management.
  */
 
@@ -23,11 +23,11 @@ import type {
   StagedSpec,
 } from "../types.js";
 
-const GEN_MD_DIR = ".gen-md";
+const GEN_MD_DIR = ".gitgen";
 const DEFAULT_BRANCH = "main";
 
 /**
- * Store for gen-md state and objects
+ * Store for gitgen state and objects
  */
 export class GenMdStore {
   private root: string;
@@ -39,21 +39,21 @@ export class GenMdStore {
   }
 
   /**
-   * Get the .gen-md directory path
+   * Get the .gitgen directory path
    */
   get path(): string {
     return this.genMdDir;
   }
 
   /**
-   * Check if gen-md is initialized in this directory
+   * Check if gitgen is initialized in this directory
    */
   async isInitialized(): Promise<boolean> {
     return this.exists(this.genMdDir);
   }
 
   /**
-   * Initialize the .gen-md directory structure
+   * Initialize the .gitgen directory structure
    */
   async init(): Promise<void> {
     // Create directory structure
@@ -383,7 +383,7 @@ export class GenMdStore {
   }
 
   /**
-   * Find all .gen.md files in the repository
+   * Find all .gitgen.md files in the repository
    */
   async findAllSpecs(): Promise<string[]> {
     const specs: string[] = [];
@@ -392,10 +392,10 @@ export class GenMdStore {
   }
 
   /**
-   * Recursively walk directory to find .gen.md files
+   * Recursively walk directory to find .gitgen.md files
    */
   private async walkDir(dir: string, specs: string[]): Promise<void> {
-    // Skip .gen-md, node_modules, .git directories
+    // Skip .gitgen, node_modules, .git directories
     const basename = dir.split("/").pop();
     if (
       basename === GEN_MD_DIR ||
@@ -413,7 +413,7 @@ export class GenMdStore {
 
         if (entry.isDirectory()) {
           await this.walkDir(fullPath, specs);
-        } else if (entry.name.endsWith(".gen.md")) {
+        } else if (entry.name.endsWith(".gitgen.md")) {
           specs.push(fullPath);
         }
       }
@@ -431,7 +431,7 @@ export function createStore(root: string = process.cwd()): GenMdStore {
 }
 
 /**
- * Find the gen-md root (directory containing .gen-md)
+ * Find the gitgen root (directory containing .gitgen)
  */
 export async function findGenMdRoot(
   startPath: string = process.cwd()

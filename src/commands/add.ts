@@ -1,7 +1,7 @@
 /**
  * Add Command
  *
- * Creates a .gen.md spec for an existing file OR stages a spec for commit.
+ * Creates a .gitgen.md spec for an existing file OR stages a spec for commit.
  * Like `git add`.
  */
 
@@ -34,19 +34,19 @@ export interface AddOptions {
 export async function addCommand(options: AddOptions): Promise<AddResult> {
   const filePath = resolve(options.file);
 
-  // Find gen-md root
+  // Find gitgen root
   const root = await findGenMdRoot(dirname(filePath));
   if (!root) {
     throw new Error(
-      "Not a gen-md repository. Run 'gen-md init' to initialize."
+      "Not a gitgen repository. Run 'gitgen init' to initialize."
     );
   }
 
   const store = createStore(root);
   const parser = createParser();
 
-  // Check if the file is a .gen.md spec or a regular file
-  if (filePath.endsWith(".gen.md")) {
+  // Check if the file is a .gitgen.md spec or a regular file
+  if (filePath.endsWith(".gitgen.md")) {
     // Stage the spec for commit
     return stageSpec(filePath, store, parser, root);
   } else {
@@ -56,7 +56,7 @@ export async function addCommand(options: AddOptions): Promise<AddResult> {
 }
 
 /**
- * Stage an existing .gen.md spec for commit
+ * Stage an existing .gitgen.md spec for commit
  */
 async function stageSpec(
   specPath: string,
@@ -91,7 +91,7 @@ async function stageSpec(
 }
 
 /**
- * Create a new .gen.md spec for a file
+ * Create a new .gitgen.md spec for a file
  */
 async function createSpec(
   filePath: string,
@@ -103,7 +103,7 @@ async function createSpec(
   const ext = extname(filePath);
   const base = basename(filePath, ext);
   const dir = dirname(filePath);
-  const specPath = resolve(dir, `${base}.gen.md`);
+  const specPath = resolve(dir, `${base}.gitgen.md`);
 
   // Check if spec already exists
   try {

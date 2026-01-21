@@ -1,7 +1,7 @@
 /**
  * Cascade Command
  *
- * Shows the inheritance chain for a .gen.md spec.
+ * Shows the inheritance chain for a .gitgen.md spec.
  * Helps debug cascading configuration issues.
  */
 
@@ -15,7 +15,7 @@ import type { GenMdFile, ResolvedGenMdConfig } from "../types.js";
  * Options for cascade command
  */
 export interface CascadeOptions {
-  /** Path to the .gen.md spec */
+  /** Path to the .gitgen.md spec */
   spec: string;
   /** Show full content of each file */
   full?: boolean;
@@ -51,11 +51,11 @@ export interface CascadeResult {
 export async function cascadeCommand(options: CascadeOptions): Promise<CascadeResult> {
   const specPath = resolve(options.spec);
 
-  // Find gen-md root
+  // Find gitgen root
   const root = await findGenMdRoot(dirname(specPath));
   if (!root) {
     throw new Error(
-      "Not a gen-md repository. Run 'gen-md init' to initialize."
+      "Not a gitgen repository. Run 'gitgen init' to initialize."
     );
   }
 

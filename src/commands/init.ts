@@ -1,7 +1,7 @@
 /**
  * Init Command
  *
- * Initializes a gen-md repository by creating the .gen-md directory.
+ * Initializes a gitgen repository by creating the .gitgen directory.
  * Like `git init`.
  */
 
@@ -23,7 +23,7 @@ export interface InitOptions {
 export interface InitResult {
   /** Path to the initialized repository */
   path: string;
-  /** Path to the .gen-md directory */
+  /** Path to the .gitgen directory */
   genMdPath: string;
   /** Whether this was a new initialization or reinit */
   isNew: boolean;
@@ -51,11 +51,11 @@ export async function initCommand(
 
   if (wasInitialized) {
     console.error(
-      chalk.yellow(`Reinitialized existing gen-md repository in ${store.path}`)
+      chalk.yellow(`Reinitialized existing gitgen repository in ${store.path}`)
     );
   } else {
     console.error(
-      chalk.green(`Initialized empty gen-md repository in ${store.path}`)
+      chalk.green(`Initialized empty gitgen repository in ${store.path}`)
     );
   }
 
@@ -67,7 +67,7 @@ export async function initCommand(
  */
 export function formatInitResult(result: InitResult): string {
   if (result.isNew) {
-    return chalk.green(`Initialized empty gen-md repository in ${result.genMdPath}`);
+    return chalk.green(`Initialized empty gitgen repository in ${result.genMdPath}`);
   }
-  return chalk.yellow(`Reinitialized existing gen-md repository in ${result.genMdPath}`);
+  return chalk.yellow(`Reinitialized existing gitgen repository in ${result.genMdPath}`);
 }

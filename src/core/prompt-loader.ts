@@ -80,7 +80,7 @@ async function fileExists(path: string): Promise<boolean> {
  *
  * Resolution order:
  * 1. Custom prompts directory (if set)
- * 2. Project-local .gen-md/prompts/ directory
+ * 2. Project-local .gitgen/prompts/ directory
  * 3. Built-in prompts directory
  */
 export async function loadPrompt(
@@ -105,8 +105,8 @@ export async function loadPrompt(
     }
   }
 
-  // Try project-local .gen-md/prompts/
-  const localPath = join(cwd, ".gen-md", "prompts", filename);
+  // Try project-local .gitgen/prompts/
+  const localPath = join(cwd, ".gitgen", "prompts", filename);
   if (await fileExists(localPath)) {
     const content = await readFile(localPath, "utf-8");
     promptCache.set(cacheKey, content);
