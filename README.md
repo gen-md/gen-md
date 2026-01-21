@@ -3,38 +3,170 @@
 [![npm version](https://badge.fury.io/js/gitgen.svg)](https://www.npmjs.com/package/gitgen)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**Git for AI-generated content.** Version control for what SHOULD BE.
+**AI co-pilot for git workflows.** Declarative file generation that works alongside your existing git practices.
 
 ```
 git manages what IS.
 gitgen manages what SHOULD BE.
 ```
 
-GitGen brings the full power of version control—staging, history, rollback—to AI-powered file generation with **interactive refinement**.
+## What is gitgen?
 
-## The Killer Feature: Interactive Refinement
+gitgen generates files from declarative specs (`.gitgen.md` files). You describe what a file should contain, gitgen generates it using any LLM provider.
+
+- Works alongside git, not instead of it
+- One spec file = one output file
+- Cascading configuration inheritance
+- Multi-provider: Anthropic, OpenAI, Ollama (local)
+- Full generation history with rollback
+
+## Real Workflow: Feature Branch with Generated Docs
 
 ```bash
-$ gitgen refine README.gitgen.md
-Generating initial version...
+# Start a feature branch
+git checkout -b feature/user-auth
 
-Preview:
-───────────────────────────────────
-# My Project
-A CLI tool for...
-───────────────────────────────────
+# Create a spec for the module's README
+gitgen add src/auth/README.md --description "Auth module documentation"
 
-You: Make the description more exciting
-Regenerating...
+# Preview what would be generated
+gitgen diff src/auth/README.gitgen.md
 
-Preview:
-───────────────────────────────────
-# My Project
-The ultimate CLI tool that revolutionizes...
-───────────────────────────────────
+# Generate the file
+gitgen commit -m "Generate auth module docs"
 
-You: /accept
-✓ Saved to README.md
+# Commit everything to git
+git add -A && git commit -m "Add user authentication with docs"
+git push origin feature/user-auth
+```
+
+gitgen generates the files. git tracks them. They work together.
+
+## How .gitgen.md Files Are Calculated
+
+Specs inherit from parent directories. Place a `.gitgen.md` anywhere to define defaults for all specs below it.
+
+```
+project/
+├── .gitgen.md                    # Root: company defaults
+├── packages/
+│   ├── .gitgen.md                # Package-level defaults
+│   └── api/
+│       └── README.gitgen.md      # Leaf spec (inherits from both)
+```
+
+### Example Cascade
+
+**project/.gitgen.md** (root defaults)
+```yaml
+---
+context:
+  - ./package.json
+skills:
+  - ./.gitgen/skills/company-style.md
+model: claude-sonnet-4
+---
+All documentation follows company standards.
+```
+
+**project/packages/.gitgen.md** (package defaults)
+```yaml
+---
+context:
+  - ./shared/types.ts
+skills:
+  - ./.gitgen/skills/api-docs.md
+---
+Package documentation includes API reference.
+```
+
+**project/packages/api/README.gitgen.md** (leaf spec)
+```yaml
+---
+output: README.md
+context:
+  - ./src/index.ts
+---
+Generate API documentation with examples.
+```
+
+**Resolved configuration:**
+```yaml
+---
+output: README.md
+model: claude-sonnet-4                        # Inherited from root
+context:                                      # Arrays concatenate + dedupe
+  - ./package.json                            # from root
+  - ./shared/types.ts                         # from packages/
+  - ./src/index.ts                            # from leaf
+skills:
+  - ./.gitgen/skills/company-style.md         # from root
+  - ./.gitgen/skills/api-docs.md              # from packages/
+---
+All documentation follows company standards.  # root body
+
+Package documentation includes API reference. # packages/ body
+
+Generate API documentation with examples.     # leaf body
+```
+
+**Merge rules:**
+- Scalars (name, output, model): child overrides parent
+- Arrays (context, skills): concatenate and deduplicate
+- Body: append (parent first, then child)
+
+Use `gitgen cascade <spec>` to see the full inheritance chain.
+
+## Production Workflows
+
+gitgen works for any git-based production workflow where files can be generated from specs.
+
+### Code Generation
+```bash
+# Generate README from package.json + source files
+gitgen add README.md --description "Project documentation"
+
+# Generate config files
+gitgen add tsconfig.json --description "TypeScript config for Node.js library"
+
+# Generate test stubs
+gitgen add src/auth/__tests__/login.test.ts --description "Unit tests for login flow"
+```
+
+### Documentation
+```bash
+# API documentation from source
+gitgen add docs/api/users.md --description "User API reference"
+
+# Changelog from git history
+gitgen add CHANGELOG.md --description "Changelog from recent commits"
+
+# Migration guides
+gitgen add docs/migration/v2.md --description "Migration guide from v1 to v2"
+```
+
+### Infrastructure
+```bash
+# Dockerfile from package.json
+gitgen add Dockerfile --description "Production Dockerfile for Node.js app"
+
+# CI/CD configuration
+gitgen add .github/workflows/ci.yml --description "GitHub Actions CI pipeline"
+
+# Kubernetes manifests
+gitgen add k8s/deployment.yaml --description "K8s deployment for production"
+```
+
+### Content & Media
+```bash
+# Blog posts from outlines
+gitgen add content/blog/launch-announcement.md --description "Launch blog post"
+
+# Release notes
+gitgen add releases/v2.0.0.md --description "Release notes for v2.0.0"
+
+# Translations
+gitgen add i18n/es/messages.json --description "Spanish translations"
 ```
 
 ## Installation
@@ -50,45 +182,37 @@ npm install -g gitgen
 ## Quick Start
 
 ```bash
-# Initialize gitgen
+# Initialize gitgen in your project
 gitgen init
 
-# Create a spec for a file
+# Create a spec
 gitgen add README.md --description "Project documentation"
 
-# Interactive refinement (the magic!)
-gitgen refine README.gitgen.md
+# Preview the generation
+gitgen diff README.gitgen.md
 
-# Or generate directly
-gitgen commit -m "Generate docs"
+# Generate the file
+gitgen commit -m "Generate README"
 ```
 
 ## Multi-Provider Support
-
-GitGen works with any LLM provider:
 
 ```bash
 # See available providers
 gitgen provider list
 
-Available Providers
-
-✓ anthropic    (claude-opus-4, claude-sonnet-4, claude-3-5-haiku...)
-✓ openai       (gpt-4o, gpt-4o-mini, gpt-4-turbo...)
-✓ ollama       (llama3, codellama, mistral...)
-
 # Set your default
 gitgen config set provider anthropic
 gitgen config set model claude-sonnet-4
 
-# Or specify per-command
+# Override per-command
 gitgen diff README.gitgen.md --provider openai --model gpt-4o
 ```
 
 **Environment Variables:**
-- `ANTHROPIC_API_KEY` - For Anthropic Claude models
-- `OPENAI_API_KEY` - For OpenAI models
-- Ollama runs locally, no API key needed
+- `ANTHROPIC_API_KEY` - Anthropic Claude models
+- `OPENAI_API_KEY` - OpenAI models
+- Ollama runs locally, no key needed
 
 ## Commands
 
@@ -101,7 +225,7 @@ gitgen diff README.gitgen.md --provider openai --model gpt-4o
 | `gitgen diff <spec>` | Preview predicted changes |
 | `gitgen add <file>` | Create or stage spec |
 | `gitgen commit` | Generate all staged specs |
-| `gitgen refine <spec>` | **Interactive refinement session** |
+| `gitgen refine <spec>` | Interactive refinement session |
 
 ### History & Rollback
 
@@ -127,17 +251,16 @@ gitgen diff README.gitgen.md --provider openai --model gpt-4o
 |---------|-------------|
 | `gitgen cascade <spec>` | Show inheritance chain |
 | `gitgen validate [path]` | Validate specs without API |
-| `gitgen watch` | Auto-regenerate on changes |
 
 ## Interactive Refinement
 
-The `refine` command opens an interactive session where you can iterate with the AI:
+The `refine` command opens a chat session where you iterate on generations:
 
 ```bash
 gitgen refine README.gitgen.md
 ```
 
-**Session Commands:**
+**Session commands:**
 | Command | Description |
 |---------|-------------|
 | `/accept` | Accept current version and save |
@@ -146,17 +269,16 @@ gitgen refine README.gitgen.md
 | `/history` | Show all versions |
 | `/diff` | Show diff from original |
 | `/model <name>` | Switch model mid-session |
-| `/provider <name>` | Switch provider mid-session |
 | `/help` | Show all commands |
 
-Just type natural language to refine:
+Type natural language to refine:
 - "Make it more concise"
-- "Add more code examples"
+- "Add code examples"
 - "Use a friendlier tone"
 
 ## The `.gitgen.md` Spec Format
 
-```markdown
+```yaml
 ---
 name: "README Generator"
 description: "Project documentation"
@@ -166,8 +288,8 @@ context:
   - ./src/index.ts
 skills:
   - ./.gitgen/skills/docs.md
-model: claude-sonnet-4      # Optional: override default
-provider: anthropic         # Optional: override default
+model: claude-sonnet-4
+provider: anthropic
 ---
 
 Generate comprehensive documentation including:
@@ -185,7 +307,8 @@ A minimal example.
 </example>
 ```
 
-**Frontmatter Fields:**
+**Frontmatter fields:**
+
 | Field | Required | Description |
 |-------|----------|-------------|
 | `output` | Yes | Target file path |
@@ -195,24 +318,6 @@ A minimal example.
 | `skills` | No | Domain knowledge files |
 | `model` | No | Override default model |
 | `provider` | No | Override default provider |
-
-## Cascading Configuration
-
-Place a `.gitgen.md` in any directory to define defaults:
-
-```
-project/
-├── .gitgen.md              # Root: company standards
-├── packages/
-│   ├── .gitgen.md          # Package defaults
-│   └── api/
-│       └── README.gitgen.md  # Inherits from both
-```
-
-**Merge Rules:**
-- Scalars (name, output, model): Child overrides parent
-- Arrays (context, skills): Concatenate and deduplicate
-- Body: Append child to parent
 
 ## The `.gitgen/` Directory
 
@@ -228,11 +333,11 @@ project/
 
 ## Generation History
 
-Every generation is tracked and can be viewed or restored:
+Every generation is tracked:
 
 ```bash
 # View history
-$ gitgen log README.gitgen.md
+gitgen log README.gitgen.md
 
 commit a3f9e2d
 Model: claude-sonnet-4
@@ -248,62 +353,10 @@ Date: 2024-01-14 15:20:00
     Initial generation
 
 # View specific generation
-$ gitgen show a3f9e2d
+gitgen show a3f9e2d
 
-# Reset to previous
-$ gitgen reset b4k7d3e --hard
-Reset README.md to generation b4k7d3e
-```
-
-## Example Workflows
-
-### Generate Documentation
-
-```bash
-gitgen init
-gitgen add README.md --description "Project docs"
-gitgen refine README.gitgen.md
-# Iterate until happy, then /accept
-```
-
-### Review and Iterate
-
-```bash
-# See what would change
-gitgen diff README.gitgen.md
-
-# Don't like it? Refine interactively
-gitgen refine README.gitgen.md
-
-# Happy? Commit it
-gitgen add README.gitgen.md
-gitgen commit -m "Update docs"
-```
-
-### Rollback a Bad Generation
-
-```bash
-# See history
-gitgen log README.gitgen.md
-
-# Preview what you'd restore
-gitgen show abc123
-
-# Restore it
-gitgen reset abc123 --hard
-```
-
-### Use Different Models
-
-```bash
-# Quick draft with fast model
-gitgen diff README.gitgen.md --model claude-3-5-haiku
-
-# Polish with powerful model
-gitgen refine README.gitgen.md --model claude-opus-4
-
-# Try a different provider
-gitgen refine README.gitgen.md --provider openai --model gpt-4o
+# Rollback
+gitgen reset b4k7d3e --hard
 ```
 
 ## Contributing
