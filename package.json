@@ -1,7 +1,7 @@
 {
   "name": "gitgen",
   "version": "1.0.0",
-  "description": "Minimal bridge between git and LLM, and vice versa. Generate files from .gitgen.md specs.",
+  "description": "Predictive git. Generate specs from git history, and generate new branches for feature implementations.",
   "type": "module",
   "bin": {
     "gitgen": "./gitgen.ts"
