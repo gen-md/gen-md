@@ -1,20 +1,13 @@
 {
   "name": "gitgen",
-  "version": "0.2.0",
-  "description": "Git for AI-generated content. Version control for what SHOULD BE.",
+  "version": "1.0.0",
+  "description": "Minimal bridge between git and LLM. Generate files from .gitgen.md specs.",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "bin": {
-    "gitgen": "./dist/index.js"
+    "gitgen": "./gitgen.ts"
   },
   "scripts": {
-    "build": "tsc && cp -r prompts dist/",
-    "dev": "tsc --watch",
-    "start": "node dist/index.js",
-    "test": "vitest",
-    "lint": "eslint src/",
-    "typecheck": "tsc --noEmit"
+    "start": "npx tsx gitgen.ts"
   },
   "repository": {
     "type": "git",
@@ -23,37 +16,22 @@
   "keywords": [
     "gitgen",
     "ai",
-    "code-generation",
-    "git",
     "llm",
-    "openai",
+    "code-generation",
     "anthropic",
-    "ollama",
-    "version-control",
-    "predictive"
+    "claude"
   ],
-  "author": "",
   "license": "MIT",
   "engines": {
     "node": ">=20.0.0"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.52.0",
-    "chalk": "^5.3.0",
-    "commander": "^12.0.0",
-    "diff": "^5.2.0",
-    "gray-matter": "^4.0.3",
-    "openai": "^4.104.0"
+    "gray-matter": "^4.0.3"
   },
   "devDependencies": {
-    "@eslint/js": "^9.0.0",
-    "@types/diff": "^5.2.0",
     "@types/node": "^20.0.0",
-    "eslint": "^9.0.0",
-    "globals": "^15.0.0",
-    "prettier": "^3.2.0",
-    "typescript": "^5.3.0",
-    "typescript-eslint": "^8.0.0",
-    "vitest": "^1.0.0"
+    "tsx": "^4.0.0",
+    "typescript": "^5.3.0"
   }
 }
