@@ -166,3 +166,241 @@ export interface GeneratedPrompt {
   /** Source .gen.md file path */
   sourcePath: string;
 }
+
+// ============================================
+// Git Context Types
+// ============================================
+
+/**
+ * Represents a single git commit
+ */
+export interface GitCommit {
+  /** Commit SHA (short or full) */
+  hash: string;
+
+  /** Commit message (first line) */
+  subject: string;
+
+  /** Full commit message body */
+  body: string;
+
+  /** Author name */
+  author: string;
+
+  /** Author email */
+  authorEmail: string;
+
+  /** Commit timestamp */
+  date: Date;
+
+  /** Files changed in this commit */
+  files: string[];
+}
+
+/**
+ * Git context for prompt enrichment
+ */
+export interface GitContext {
+  /** Recent commits affecting the output file */
+  commits: GitCommit[];
+
+  /** Current branch name */
+  branch: string;
+
+  /** Repository root path */
+  repoRoot: string;
+
+  /** Remote URL (for GitHub integration) */
+  remoteUrl: string | null;
+}
+
+/**
+ * Options for git context extraction
+ */
+export interface GitContextOptions {
+  /** Maximum number of commits to fetch */
+  maxCommits?: number;
+
+  /** Only commits affecting specific files */
+  filterPaths?: string[];
+}
+
+// ============================================
+// GitHub/PR Types
+// ============================================
+
+/**
+ * GitHub authentication configuration
+ */
+export interface GitHubAuth {
+  /** GitHub personal access token */
+  token: string;
+
+  /** Token source for logging/debugging */
+  source: "env" | "gh-cli";
+}
+
+/**
+ * Represents a GitHub Pull Request
+ */
+export interface GitHubPR {
+  /** PR number */
+  number: number;
+
+  /** PR title */
+  title: string;
+
+  /** PR description/body */
+  body: string;
+
+  /** PR state */
+  state: "open" | "closed" | "merged";
+
+  /** Base branch */
+  base: string;
+
+  /** Head branch */
+  head: string;
+
+  /** PR author */
+  author: string;
+
+  /** Merge timestamp (if merged) */
+  mergedAt: Date | null;
+
+  /** Files changed in the PR */
+  files: GitHubPRFile[];
+
+  /** PR URL */
+  url: string;
+}
+
+/**
+ * File changed in a PR
+ */
+export interface GitHubPRFile {
+  /** File path */
+  path: string;
+
+  /** Change type */
+  status: "added" | "modified" | "removed" | "renamed";
+
+  /** Lines added */
+  additions: number;
+
+  /** Lines removed */
+  deletions: number;
+
+  /** Patch content */
+  patch: string | null;
+}
+
+/**
+ * PR-based one-shot example (extends OneShotExample)
+ */
+export interface PRExample extends OneShotExample {
+  /** Source PR number */
+  prNumber: number;
+
+  /** PR title (used as example label) */
+  prTitle: string;
+
+  /** PR URL for reference */
+  prUrl: string;
+
+  /** When the PR was merged */
+  mergedAt: Date;
+}
+
+// ============================================
+// Generated PR Output Types
+// ============================================
+
+/**
+ * Options for PR generation
+ */
+export interface PRGenerationOptions {
+  /** PR title (or generate from changes) */
+  title?: string;
+
+  /** Base branch for PR */
+  base?: string;
+
+  /** Labels to apply */
+  labels?: string[];
+
+  /** Draft PR */
+  draft?: boolean;
+}
+
+/**
+ * Generated PR output structure
+ */
+export interface GeneratedPR {
+  /** PR title */
+  title: string;
+
+  /** PR description/body (markdown) */
+  body: string;
+
+  /** Base branch */
+  base: string;
+
+  /** Head branch (to be created) */
+  head: string;
+
+  /** Files to be changed */
+  files: GeneratedPRFile[];
+
+  /** Labels to apply */
+  labels: string[];
+
+  /** Source .gen.md file path */
+  sourcePath: string;
+}
+
+/**
+ * File to be created/modified in a PR
+ */
+export interface GeneratedPRFile {
+  /** File path */
+  path: string;
+
+  /** File content */
+  content: string;
+
+  /** Action */
+  action: "create" | "update" | "delete";
+}
+
+// ============================================
+// Enhanced Prompt Types
+// ============================================
+
+/**
+ * Extended prompt options with git/PR support
+ */
+export interface EnhancedPromptOptions extends PromptOptions {
+  /** Include git context */
+  includeGit?: boolean;
+
+  /** Git context options */
+  gitOptions?: GitContextOptions;
+
+  /** Include PR examples */
+  includePRExamples?: boolean;
+
+  /** Maximum PR examples to include */
+  maxPRExamples?: number;
+}
+
+/**
+ * Enhanced generated prompt with git/PR context
+ */
+export interface EnhancedGeneratedPrompt extends GeneratedPrompt {
+  /** Git context (if requested) */
+  gitContext: GitContext | null;
+
+  /** PR examples used (if requested) */
+  prExamples: PRExample[];
+}

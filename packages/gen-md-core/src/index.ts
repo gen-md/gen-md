@@ -10,6 +10,21 @@ export type {
   CompactOptions,
   PromptOptions,
   GeneratedPrompt,
+  // Git types
+  GitCommit,
+  GitContext,
+  GitContextOptions,
+  // GitHub/PR types
+  GitHubAuth,
+  GitHubPR,
+  GitHubPRFile,
+  PRExample,
+  PRGenerationOptions,
+  GeneratedPR,
+  GeneratedPRFile,
+  // Enhanced prompt types
+  EnhancedPromptOptions,
+  EnhancedGeneratedPrompt,
 } from "./types/index.js";
 
 // Parser
@@ -42,6 +57,28 @@ export {
 
 // Prompt Generator
 export { PromptGenerator, createPromptGenerator } from "./prompt/index.js";
+
+// Git Context
+export {
+  GitContextExtractor,
+  createGitExtractor,
+  formatGitContextForPrompt,
+} from "./git/index.js";
+
+// GitHub Integration
+export {
+  GitHubClient,
+  createGitHubClient,
+  resolveGitHubAuth,
+  parseGitHubRepo,
+} from "./github/index.js";
+
+// PR Generator
+export {
+  PRGenerator,
+  createPRGenerator,
+  formatPRForGhCli,
+} from "./pr/index.js";
 
 // Utilities
 export { mergeArrays, mergeBody, deduplicateArray } from "./utils/merge.js";

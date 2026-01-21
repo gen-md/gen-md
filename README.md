@@ -1,6 +1,6 @@
 # gen-md
 
-**gen-md** is a generative markdown framework that lets you define how files are generated using simple `.gen.md` prompts. It provides a standardized way to generate and regenerate files based on context, templates, and skills.
+**gen-md** is a generative markdown framework that lets you define how files are generated using simple `.gen.md` prompts. It provides a consistent interface for developers to converse through their agents about their source code - .gen.md files become the ultimate spec for the codebase.
 
 ![gen-md Landing](./tests/e2e/screenshots/gen-md-landing.png)
 
@@ -13,8 +13,10 @@ Stop writing code for content generation. Instead, groom and cascade in-codebase
 - **File-Specific Prompts**: Each `.gen.md` file describes how to generate its corresponding file
 - **Metadata-Driven**: Use a simple metadata header to define name, description, context, and skills
 - **Context and Skills**: Reference other files or reusable skill modules to enrich the generation process
-- **Conversational Prompts**: Generate LLM-ready prompts with one-shot examples
-- **Git-Aware Generation**: Incorporate Git history to create more informed, contextual prompts
+- **Conversational Prompts**: Generate LLM-ready prompts with `--prompt` flag on all commands
+- **Git-Aware Generation**: Include git context with `--git` flag (branch, commits, files)
+- **GitHub PR Integration**: Multishot examples from merged PRs with `--from-pr` flag
+- **PR-Ready Output**: Generate PR-ready output with the `gen-md pr` command
 - **Cascading Context**: Define global `.gen.md` files in parent folders to apply common patterns
 - **Compaction**: Merge multiple `.gen.md` files into a single consolidated generator
 - **Validation**: Verify `.gen.md` files and confirm outputs exist and are aligned
@@ -34,7 +36,7 @@ output: "output-filename.ext"
 ---
 
 Generation instructions go here as plain markdown.
-No <input> tags needed - the body is the prompt.
+The body is the prompt.
 
 One-shot examples use <example> blocks:
 <example>
@@ -58,7 +60,7 @@ output result
 
 ### @gen-md/core
 
-Core library providing parsing, cascading resolution, compaction, validation, and prompt generation.
+Core library providing parsing, cascading resolution, compaction, validation, prompt generation, git context extraction, GitHub API integration, and PR generation.
 
 ```bash
 npm install @gen-md/core
@@ -70,7 +72,13 @@ import {
   CascadingResolver,
   Compactor,
   Validator,
-  PromptGenerator
+  PromptGenerator,
+  GitContextExtractor,
+  GitHubClient,
+  PRGenerator,
+  createGitExtractor,
+  createGitHubClient,
+  resolveGitHubAuth,
 } from '@gen-md/core';
 
 // Parse a .gen.md file
@@ -87,6 +95,19 @@ const resolved = await resolver.resolve('./packages/cli/README.gen.md');
 const promptGen = new PromptGenerator();
 const result = await promptGen.generate('./README.gen.md');
 console.log(result.prompt);  // Ready for LLM
+
+// Extract git context
+const gitExtractor = createGitExtractor({ maxCommits: 10 });
+const gitContext = await gitExtractor.extract('./README.gen.md');
+console.log(gitContext.branch);
+console.log(gitContext.commits);
+
+// GitHub integration
+const auth = await resolveGitHubAuth();
+if (auth) {
+  const github = createGitHubClient(auth);
+  const prs = await github.getMergedPRsForFiles('owner', 'repo', ['src/index.ts']);
+}
 
 // Compact multiple files
 const compactor = new Compactor({ arrayMerge: 'dedupe' });
@@ -107,6 +128,12 @@ npm install -g @gen-md/cli
 npx gen-md <command>
 ```
 
+**Global Flags (all commands):**
+| Flag | Description |
+|------|-------------|
+| `--prompt` | Output as conversational prompt for agent consumption |
+| `--git` | Include git context (branch, recent commits) |
+
 **Commands:**
 | Command | Description |
 |---------|-------------|
@@ -114,6 +141,7 @@ npx gen-md <command>
 | `validate <files...>` | Validate .gen.md files |
 | `compact <files...>` | Merge multiple .gen.md files |
 | `prompt <file>` | Generate conversational prompt |
+| `pr <file>` | Generate PR-ready output |
 
 ### Extensions
 
@@ -138,16 +166,25 @@ gen-md/
 │   │   │   ├── compactor/    # File merger & serializer
 │   │   │   ├── validator/    # Validation system
 │   │   │   ├── prompt/       # Prompt generator
+│   │   │   ├── git/          # Git context extractor
+│   │   │   ├── github/       # GitHub API client
+│   │   │   ├── pr/           # PR generator
 │   │   │   └── __tests__/    # Unit tests
 │   │   └── package.json
 │   ├── gen-md-cli/           # CLI package
 │   │   ├── src/
-│   │   │   ├── commands/     # CLI commands
+│   │   │   ├── commands/     # CLI commands (cascade, validate, compact, prompt, pr)
 │   │   │   └── __tests__/    # Unit tests
 │   │   ├── bin/
 │   │   └── package.json
 │   ├── gen-md-vscode/        # VS Code extension
 │   ├── gen-md-chrome-ext/     # Chrome extension
+│   ├── gen-md-claude-code-plugin/ # Claude Code plugin
+│   │   ├── .claude-plugin/
+│   │   │   └── plugin.json
+│   │   ├── commands/
+│   │   ├── hooks/
+│   │   └── skills/
 │   └── ...
 ├── tests/
 │   └── e2e/                  # Playwright E2E tests
@@ -180,8 +217,11 @@ npx gen-md cascade ./README.gen.md --show-merged
 # Validate all generators
 npx gen-md validate *.gen.md
 
-# Generate conversational prompt
-npx gen-md prompt ./README.gen.md
+# Generate conversational prompt with git context
+npx gen-md prompt ./README.gen.md --git
+
+# Generate PR-ready output
+npx gen-md pr ./README.gen.md --json
 ```
 
 ## Cascading Configuration
@@ -208,7 +248,7 @@ When resolving `app.gen.md`, the cascade chain merges configurations:
 
 Preview a cascade chain:
 ```bash
-npx gen-md cascade ./packages/cli/app.gen.md --show-merged
+npx gen-md cascade ./packages/cli/app.gen.md --show-merged --prompt
 ```
 
 ## Compaction
@@ -227,13 +267,15 @@ npx gen-md compact file1.gen.md file2.gen.md -o merged.gen.md
 | `--body-merge <strategy>` | append, prepend, replace (default: append) |
 | `--resolve-paths` | Convert relative paths to absolute |
 | `--dry-run` | Preview output without writing |
+| `--prompt` | Output as conversational prompt |
+| `--git` | Include git context |
 
 ## Validation
 
 Validate `.gen.md` files to ensure outputs exist and references are valid:
 
 ```bash
-npx gen-md validate *.gen.md
+npx gen-md validate *.gen.md --prompt
 ```
 
 ![Validation Output](./tests/e2e/screenshots/gen-md-validate.png)
@@ -245,13 +287,15 @@ npx gen-md validate *.gen.md
 | `--no-check-context` | Skip checking if context files exist |
 | `--no-check-skills` | Skip checking if skill files exist |
 | `--json` | Output results as JSON |
+| `--prompt` | Output as conversational prompt |
+| `--git` | Include git context |
 
 ## Prompt Generation
 
 Generate conversational prompts with one-shot examples:
 
 ```bash
-npx gen-md prompt ./README.gen.md
+npx gen-md prompt ./README.gen.md --git
 ```
 
 **Options:**
@@ -261,7 +305,35 @@ npx gen-md prompt ./README.gen.md
 | `--no-current-code` | Don't include current output content |
 | `--user-prompt <text>` | Override the user prompt |
 | `--examples-merge <strategy>` | concatenate, prepend, replace, dedupe |
+| `--git` | Include git context |
+| `--from-pr <n>` | Include PR #n as multishot example |
+| `--max-pr-examples <n>` | Max number of PR examples |
 | `--json` | Output as JSON structure |
+
+## PR Generation
+
+Generate PR-ready output from a `.gen.md` file:
+
+```bash
+npx gen-md pr ./README.gen.md --json
+```
+
+**Options:**
+| Option | Description |
+|--------|-------------|
+| `--title <title>` | Override PR title |
+| `--base <branch>` | Target branch (default: main) |
+| `--from-pr <n>` | Include PR #n as multishot example |
+| `--max-pr-examples <n>` | Max number of PR examples |
+| `--create` | Create the PR using gh CLI |
+| `--json` | Output as JSON |
+
+## GitHub Authentication
+
+For PR integration, authentication is resolved in order:
+1. `GITHUB_TOKEN` environment variable
+2. `GH_TOKEN` environment variable
+3. `gh auth token` command (if gh CLI is installed)
 
 ## Testing
 

@@ -65,6 +65,7 @@ Cascade chain: `[Level 0, Level 1, Level 2]`
 | Scalars (name, output) | Child overrides parent |
 | Arrays (context, skills) | Concatenate and deduplicate |
 | Body content | Append child to parent |
+| Examples | Concatenate and deduplicate |
 
 ### Cascading Patterns
 
@@ -75,7 +76,7 @@ Place a `.gen.md` at the project root to define organization-wide standards:
 ```yaml
 ---
 name: "project-defaults"
-skills: ["./.agent/skills/gen-md/SKILL.md"]
+skills: ["./skills/gen-md/SKILL.md"]
 ---
 Follow the project style guide. Use consistent terminology.
 ```
@@ -107,42 +108,122 @@ output: "README.md"
 ---
 ```
 
-## Compaction
+## CLI Commands
 
-### When to Use Compaction
-
-Use compaction to:
-- Consolidate related generators into a single file
-- Create a "super generator" from multiple specialized ones
-- Archive and simplify complex generator hierarchies
-
-### Compaction Best Practices
-
-**1. Order Matters**
-
-Files are merged in the order specified. Put base/common generators first:
+### Core Commands
 
 ```bash
-npx gen-md compact base.gen.md specialized.gen.md -o combined.gen.md
+# Preview cascade chain
+gen-md cascade <file> [--show-merged] [--json]
+
+# Validate .gen.md files
+gen-md validate <files...> [--json]
+
+# Merge multiple files
+gen-md compact <files...> -o merged.gen.md
+
+# Generate conversational prompt
+gen-md prompt <file> [--json]
+
+# Generate PR-ready output
+gen-md pr <file> [--title <title>] [--create]
 ```
 
-**2. Resolve Path Conflicts**
+### New Flags (All Commands)
 
-When compacting files from different directories, use `--resolve-paths` to convert to absolute paths, or `--base-path` to set a common reference:
+**`--prompt`** - Output as conversational prompt format
+```bash
+gen-md cascade ./README.gen.md --prompt
+gen-md validate **/*.gen.md --prompt
+gen-md compact *.gen.md --prompt
+```
+
+**`--git`** - Include git context (commits, branch info)
+```bash
+gen-md cascade ./README.gen.md --git
+gen-md prompt ./README.gen.md --git --git-commits 10
+```
+
+**`--from-pr <number>`** - Use PR as multishot example
+```bash
+gen-md prompt ./README.gen.md --git --from-pr 123
+```
+
+## PR Integration
+
+### PR as Output Structure
+
+gen-md can generate PR-ready output with:
+- Conventional commit title
+- Structured PR body with summary and changes
+- Files to create/modify
+- Labels and branch naming
 
 ```bash
-npx gen-md compact ./a/file1.gen.md ./b/file2.gen.md --base-path .
+# Generate PR spec
+gen-md pr ./README.gen.md --json
+
+# Output gh CLI command
+gen-md pr ./README.gen.md --create
 ```
 
-**3. Preview Before Writing**
+### Multishot from PRs
 
-Always preview compacted output with `--dry-run`:
+Extract examples from merged PRs for few-shot learning:
 
 ```bash
-npx gen-md compact *.gen.md -o merged.gen.md --dry-run
+# Use specific PR as example
+gen-md prompt ./README.gen.md --from-pr 123
+
+# Auto-fetch recent PRs touching this file
+gen-md prompt ./README.gen.md --max-pr-examples 5
 ```
 
-### Merge Strategies
+## One-Shot Examples
+
+### Using Example Blocks
+
+Add examples directly in your `.gen.md` file:
+
+```markdown
+---
+name: "component-generator"
+output: "Button.tsx"
+---
+
+<example>
+Create a simple button component
+---
+export function Button({ children, onClick }) {
+  return <button onClick={onClick}>{children}</button>;
+}
+</example>
+
+<example>
+Create a button with variants
+---
+export function Button({ children, variant = "primary", onClick }) {
+  const styles = { primary: "bg-blue-500", secondary: "bg-gray-500" };
+  return <button className={styles[variant]} onClick={onClick}>{children}</button>;
+}
+</example>
+
+Generate a React component based on the specification above.
+```
+
+### Example Format
+
+Examples use `---` as separator between input and output:
+
+```
+<example>
+[input/specification]
+---
+[expected output]
+</example>
+```
+
+## Merge Strategies
 
 | Strategy | Array Behavior |
 |----------|----------------|
@@ -160,10 +241,10 @@ npx gen-md compact *.gen.md -o merged.gen.md --dry-run
 
 ### Writing Style
 
-1. **Be concise** - Avoid unnecessary verbosity; every sentence should add value
+1. **Be concise** - Avoid unnecessary verbosity
 2. **Be specific** - Use concrete examples over abstract descriptions
 3. **Be consistent** - Maintain terminology and formatting throughout
-4. **Be actionable** - Provide clear steps and instructions users can follow
+4. **Be actionable** - Provide clear steps and instructions
 
 ### Markdown Conventions
 
@@ -171,8 +252,6 @@ npx gen-md compact *.gen.md -o merged.gen.md --dry-run
 2. Use fenced code blocks with language identifiers
 3. Use tables for structured comparisons
 4. Use bullet points for lists, numbered lists for sequences
-5. Keep line lengths reasonable for readability
-6. Use blank lines to separate logical sections
 
 ### Code Examples
 
@@ -180,49 +259,6 @@ npx gen-md compact *.gen.md -o merged.gen.md --dry-run
 2. Include comments for non-obvious operations
 3. Show complete, runnable examples when possible
 4. Use realistic variable names and values
-
-## Common Patterns
-
-### README Generation
-
-When generating README files:
-
-1. **Start with the project name** as an H1 header
-2. **Lead with value** - Explain what the project does and why it matters in the first paragraph
-3. **Include quick start** - Provide the fastest path to using the project
-4. **Structure consistently**:
-   - Overview/Description
-   - Features
-   - Installation/Getting Started
-   - Usage Examples
-   - Configuration (if applicable)
-   - Contributing
-   - License
-
-### Monorepo Documentation
-
-For monorepo projects:
-
-1. Document the overall structure in the root README
-2. Reference package-specific documentation
-3. Explain the relationship between packages
-4. Provide workspace-level commands
-
-Example structure section:
-```
-packages/
-  gen-md-core/  - Core library (parser, resolver, compactor)
-  gen-md-cli/   - Command-line interface
-  vscode/       - VS Code extension
-  chrome/       - Chrome extension
-```
-
-### Cascading Generation
-
-Use directory-level `.gen.md` files to:
-- Define common patterns for all files in a directory
-- Set default context that applies to child generators
-- Establish consistent naming conventions
 
 ## Quality Standards
 
@@ -235,20 +271,13 @@ Use directory-level `.gen.md` files to:
 - [ ] Formatting renders correctly in markdown
 - [ ] Content answers the user's actual needs
 
-### Terminology Consistency
-
-Maintain consistent terminology within a project:
-- Choose one term and use it throughout (e.g., "generator" not mixing with "template")
-- Define abbreviations on first use
-- Match the project's existing conventions
-
 ## Anti-patterns
 
 ### What to Avoid
 
 1. **Generic filler** - Don't add content just to fill space
 2. **Excessive hedging** - Avoid "might", "could possibly", "in some cases"
-3. **Redundant explanations** - Don't repeat the same information in different words
+3. **Redundant explanations** - Don't repeat the same information
 4. **Over-documentation** - Don't document obvious behavior
 5. **Stale examples** - Don't use outdated syntax or deprecated APIs
 6. **Inconsistent formatting** - Don't mix formatting styles

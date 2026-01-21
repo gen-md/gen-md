@@ -1,0 +1,5 @@
+{
+  "name": "gen-md",
+  "version": "0.1.0",
+  "description": "Generative Markdown framework for Claude Code - create, validate, and manage .gen.md files"
+}

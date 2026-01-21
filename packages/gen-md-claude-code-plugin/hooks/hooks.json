@@ -1,0 +1,15 @@
+{
+  "hooks": [
+    {
+      "event": "PreToolUse",
+      "matcher": {
+        "tool": "Read",
+        "pattern": "**/*.gen.md"
+      },
+      "action": {
+        "type": "prompt",
+        "prompt": "A .gen.md file has been detected. This is a generative markdown configuration file.\n\n## Quick Reference\n\n**Frontmatter fields:**\n- `name` - Human-readable identifier\n- `description` - What this generator produces\n- `context` - Files to include as context\n- `skills` - Skills to apply\n- `output` - Target output file\n\n**Available commands:**\n- `/gen-md [file]` - Generate output\n- `/gen-md-validate [files...]` - Validate configuration\n- `/gen-md-cascade [file]` - View cascade chain\n- `/gen-md-prompt [file]` - Generate conversational prompt\n\n## Cascade Resolution\n\nThis file inherits from parent `.gen.md` files in ancestor directories.\nUse `/gen-md-cascade` to see the full inheritance chain."
+      }
+    }
+  ]
+}
