@@ -1,9 +1,11 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { bedrock } from "@ai-sdk/amazon-bedrock";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { openai } from "@ai-sdk/openai";
+import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 
-export type ProviderType = "anthropic" | "bedrock" | "openrouter";
+export type ProviderType = "anthropic" | "bedrock" | "openrouter" | "openai" | "google";
 
 export interface ProviderConfig {
   provider: ProviderType;
@@ -31,6 +33,21 @@ const MODEL_MAPPINGS: Record<ProviderType, Record<string, string>> = {
     "claude-opus": "us.anthropic.claude-opus-4-5-20251101-v1:0",
     "claude-haiku": "us.anthropic.claude-3-5-haiku-20241022-v1:0",
   },
+  openai: {
+    default: "gpt-4o",
+    "gpt-4o": "gpt-4o",
+    "gpt-4o-mini": "gpt-4o-mini",
+    "gpt-4-turbo": "gpt-4-turbo",
+    "o1": "o1",
+    "o1-mini": "o1-mini",
+  },
+  google: {
+    default: "gemini-2.0-flash",
+    "gemini-flash": "gemini-2.0-flash",
+    "gemini-pro": "gemini-1.5-pro",
+    "gemini-2.0-flash": "gemini-2.0-flash",
+    "gemini-1.5-pro": "gemini-1.5-pro",
+  },
   openrouter: {
     default: "meta-llama/llama-3.3-70b-instruct:free",
     "gemini": "google/gemini-2.0-flash-exp:free",
@@ -47,8 +64,9 @@ const MAX_TOKENS = 8192;
  */
 export function getProviderConfig(): ProviderConfig {
   const explicitProvider = process.env.GITGEN_PROVIDER as ProviderType;
+  const validProviders: ProviderType[] = ["anthropic", "bedrock", "openrouter", "openai", "google"];
 
-  if (explicitProvider && ["anthropic", "bedrock", "openrouter"].includes(explicitProvider)) {
+  if (explicitProvider && validProviders.includes(explicitProvider)) {
     return { provider: explicitProvider };
   }
 
@@ -56,15 +74,21 @@ export function getProviderConfig(): ProviderConfig {
   if (process.env.AWS_ACCESS_KEY_ID || process.env.AWS_REGION) {
     return { provider: "bedrock" };
   }
-  if (process.env.OPENROUTER_API_KEY) {
-    return { provider: "openrouter" };
-  }
   if (process.env.ANTHROPIC_API_KEY) {
     return { provider: "anthropic" };
   }
+  if (process.env.OPENAI_API_KEY) {
+    return { provider: "openai" };
+  }
+  if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    return { provider: "google" };
+  }
+  if (process.env.OPENROUTER_API_KEY) {
+    return { provider: "openrouter" };
+  }
 
   throw new Error(
-    "No provider configured. Set ANTHROPIC_API_KEY, AWS credentials, or OPENROUTER_API_KEY."
+    "No provider configured. Set ANTHROPIC_API_KEY, OPENAI_API_KEY, GOOGLE_GENERATIVE_AI_API_KEY, AWS credentials, or OPENROUTER_API_KEY."
   );
 }
 
@@ -80,12 +104,17 @@ export function resolveModel(modelAlias: string | undefined, provider: ProviderT
 /**
  * Get the model instance for the configured provider.
  */
-function getModel(modelId: string, provider: ProviderType) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getModel(modelId: string, provider: ProviderType): any {
   switch (provider) {
     case "anthropic":
       return anthropic(modelId);
     case "bedrock":
       return bedrock(modelId);
+    case "openai":
+      return openai(modelId);
+    case "google":
+      return google(modelId);
     case "openrouter":
       const openrouter = createOpenRouter({
         apiKey: process.env.OPENROUTER_API_KEY,

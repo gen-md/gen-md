@@ -3,7 +3,7 @@
 Generate code that matches your codebase patterns.
 
 ```bash
-npm install -g gitgen && export ANTHROPIC_API_KEY=sk-...
+npm install -g gitgen
 ```
 
 ## How It Works
@@ -95,15 +95,29 @@ Generate a README with project overview and usage.
 --prompt "instructions"  Add custom instructions
 ```
 
-## Providers
+## Setup
 
-| Provider | Variable |
-|----------|----------|
-| Anthropic | `ANTHROPIC_API_KEY` |
-| AWS Bedrock | `AWS_ACCESS_KEY_ID` + `AWS_SECRET_ACCESS_KEY` |
-| OpenRouter | `OPENROUTER_API_KEY` |
+Set one of these environment variables:
 
-Override with `GITGEN_PROVIDER` and `GITGEN_MODEL`.
+```bash
+# Anthropic
+export ANTHROPIC_API_KEY=sk-...
+
+# OpenAI
+export OPENAI_API_KEY=sk-...
+
+# Google AI
+export GOOGLE_GENERATIVE_AI_API_KEY=...
+
+# AWS Bedrock
+export AWS_ACCESS_KEY_ID=...
+export AWS_SECRET_ACCESS_KEY=...
+
+# OpenRouter (free tier available)
+export OPENROUTER_API_KEY=sk-or-...
+```
+
+Optional: override provider/model with `GITGEN_PROVIDER` and `GITGEN_MODEL`.
 
 ## Examples
 

@@ -613,9 +613,11 @@ Examples:
                                  Select best from branches
 
 Environment (pick one):
-  ANTHROPIC_API_KEY              Anthropic API key
-  OPENROUTER_API_KEY             OpenRouter API key
-  AWS_ACCESS_KEY_ID              AWS Bedrock credentials
+  ANTHROPIC_API_KEY              Anthropic
+  OPENAI_API_KEY                 OpenAI
+  GOOGLE_GENERATIVE_AI_API_KEY   Google AI
+  AWS_ACCESS_KEY_ID              AWS Bedrock
+  OPENROUTER_API_KEY             OpenRouter
 
 Provider: ${getProviderDescription()}
 `);
