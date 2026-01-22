@@ -3,30 +3,31 @@
 Generate code with git.
 
 ```bash
+npm install -g gitgen
+```
+
+Requires an API key from Anthropic, OpenAI, Google AI, OpenRouter, or AWS Bedrock. See [Setup](#setup).
+
+## Demo
+
+```bash
 # Clone any repo
 git clone https://github.com/vercel/next.js
 cd next.js
 
-# Learn its patterns
+# Analyze the codebase (creates .gitgen.md)
 git gen learn
 
-# Generate new features that match
-git gen -b feature/analytics "add analytics middleware"
-```
+# Generate two approaches on separate branches
+git gen -b feature/analytics-v1 "add analytics middleware using cookies"
+git gen -b feature/analytics-v2 "add analytics middleware using local storage"
 
-## Install
+# Test each
+git checkout feature/analytics-v1 && npm test
+git checkout feature/analytics-v2 && npm test
 
-```bash
-npm install -g gitgen
-```
-
-## Quick Start
-
-```bash
-git clone https://github.com/your-org/your-repo
-cd your-repo
-git gen learn                              # Learn codebase patterns
-git gen -b feature/auth "add JWT auth"     # Generate matching code
+# Merge the better one
+git gen merge feature/analytics-v1 feature/analytics-v2 "pick the cleaner implementation"
 ```
 
 ## Commands
@@ -67,20 +68,6 @@ export AWS_SECRET_ACCESS_KEY=...
 Override with `GITGEN_PROVIDER` and `GITGEN_MODEL`.
 
 ## Usage
-
-### Learn and Generate
-
-```bash
-git gen learn
-# → Analyzing repository...
-# → Created .gitgen.md
-
-git gen "add user authentication"
-# → Generating files...
-#   + src/middleware/auth.ts
-#   + src/routes/login.ts
-# → Created 2 files
-```
 
 ### Compare Branches
 
