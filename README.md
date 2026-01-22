@@ -52,13 +52,36 @@ $ git add . && git commit -m "feat: auth with password reset" && git push
 | `git gen diff .` | Preview spec generation |
 | `git gen init <file>` | Create spec from existing file |
 | `git gen learn` | Analyze repo, create `.gitgen.md` |
+| `git gen fork <repo>` | Fork repo, analyze, create PR |
 
 ### Options
 
 ```bash
--b <branch>    Create/switch to branch before generating
---dry-run      Show plan without generating files
+-b <branch>              Create/switch to branch before generating
+--dry-run                Show plan without generating files
+--prompt "instructions"  Add custom instructions to any command
+-p "instructions"        Short form of --prompt
 ```
+
+## Custom Prompts
+
+Every command supports `--prompt` for iterative control:
+
+```bash
+# Learn with specific focus
+git gen learn --prompt "focus on React component patterns"
+
+# Generate with constraints
+git gen "add user dashboard" --prompt "use shadcn/ui components, no external state"
+
+# Init with style guidance
+git gen init src/api/users.ts --prompt "emphasize error handling patterns"
+
+# Diff with specific requirements
+git gen diff . --prompt "include JSDoc comments"
+```
+
+This enables iterative workflows where you refine output through successive prompts.
 
 ## Providers
 
@@ -120,6 +143,79 @@ The generated spec includes:
 - Directory structure
 - Key configuration files
 
+### Custom Learning
+
+Focus the analysis with custom prompts:
+
+```bash
+# Focus on specific patterns
+git gen learn --prompt "focus on API route patterns and middleware"
+
+# Emphasize certain conventions
+git gen learn --prompt "emphasize TypeScript strict mode patterns"
+```
+
+## Fork Workflow
+
+Contribute `.gitgen.md` specs to public repositories:
+
+```bash
+$ git gen fork facebook/react
+
+→ Forking facebook/react...
+→ Changed to react/
+→ Created branch: gitgen-spec
+→ Analyzing repository...
+Tech stack: javascript, react
+Commit style: conventional
+Files: 2847
+→ Generating spec...
+✓ Created .gitgen.md
+→ Committed .gitgen.md
+→ Pushed to origin/gitgen-spec
+→ Creating pull request...
+✓ Pull request created!
+
+✓ Fork workflow complete!
+
+Your fork: https://github.com/yourname/react
+Branch: gitgen-spec
+
+Next steps:
+1. Review the generated .gitgen.md
+2. Test with: git gen "add a feature"
+3. Submit the PR to facebook/react
+```
+
+### Requirements
+
+The fork command requires the [GitHub CLI](https://cli.github.com):
+
+```bash
+# macOS
+brew install gh
+
+# Windows
+winget install GitHub.cli
+
+# Linux
+sudo apt install gh
+```
+
+Authenticate with `gh auth login` before using.
+
+### Fork via GitHub Actions
+
+Use the provided workflow to fork and analyze repos without local setup:
+
+1. Copy `.github/workflows/fork-learn.yml` to your repo
+2. Add secrets: `OPENROUTER_API_KEY` (or other provider keys)
+3. Trigger via Actions UI or CLI:
+
+```bash
+gh workflow run fork-learn.yml -f repo="owner/repo"
+```
+
 ## GitHub Action
 
 Generate directly from GitHub without local setup:
@@ -159,6 +255,51 @@ Add your provider's secrets to repository settings, then trigger via GitHub UI (
 
 ```bash
 gh workflow run gen.yml -f feature="add user authentication" -f provider=anthropic
+```
+
+## Example Repositories
+
+Browse repos with `.gitgen.md` specs to see gitgen in action:
+
+- Search GitHub: [`filename:.gitgen.md`](https://github.com/search?q=filename%3A.gitgen.md&type=code)
+- Fork any repo with `git gen fork owner/repo` to try it yourself
+
+## Workflow Examples
+
+### New Feature Development
+
+```bash
+# Start fresh branch and generate
+git gen -b feature/dark-mode "add dark mode toggle"
+
+# Iterate with custom instructions
+git gen "improve dark mode" --prompt "add system preference detection"
+
+# Preview changes
+git gen diff .
+```
+
+### Contributing to Open Source
+
+```bash
+# Fork and learn a project
+git gen fork expressjs/express
+
+# Review the generated spec
+cat .gitgen.md
+
+# Generate a feature matching their patterns
+git gen "add rate limiting middleware" --prompt "follow existing middleware patterns"
+```
+
+### Team Onboarding
+
+```bash
+# Generate project spec for new team members
+git gen learn --prompt "include onboarding tips for new developers"
+
+# New team members can generate code matching team patterns
+git gen "add new API endpoint" --prompt "follow team conventions"
 ```
 
 MIT

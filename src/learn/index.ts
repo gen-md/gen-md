@@ -247,7 +247,7 @@ function renderPrompt(template: string, vars: Record<string, string | undefined>
 /**
  * Generate a .gitgen.md specification for the repository.
  */
-export async function generateProjectSpec(): Promise<string> {
+export async function generateProjectSpec(customPrompt?: string): Promise<string> {
   const analysis = await analyzeRepo(50);
 
   const template = `Analyze this repository and create a .gitgen.md specification.
@@ -305,7 +305,7 @@ REQUIREMENTS:
 
 Output ONLY the .gitgen.md content. No markdown code fences. Start with ---`;
 
-  const prompt = renderPrompt(template, {
+  let prompt = renderPrompt(template, {
     techStack: analysis.techStack.join(", ") || "not detected",
     commitStyle: analysis.conventions.commitStyle,
     namingPatterns: analysis.conventions.namingPatterns.join("\n") || "not detected",
@@ -324,6 +324,10 @@ Output ONLY the .gitgen.md content. No markdown code fences. Start with ---`;
       .join("\n\n"),
     fileStructure: analysis.fileStructure.slice(0, 100).join("\n"),
   });
+
+  if (customPrompt) {
+    prompt += `\n\nADDITIONAL INSTRUCTIONS:\n${customPrompt}`;
+  }
 
   return llm(prompt);
 }
