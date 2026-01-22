@@ -54,7 +54,7 @@ describe("git gen CLI", () => {
       expect(output).toContain("git gen");
       expect(output).toContain("Usage:");
       expect(output).toContain("learn");
-      expect(output).toContain("fork");
+      expect(output).toContain("merge");
     });
   });
 

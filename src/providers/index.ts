@@ -26,10 +26,10 @@ const MODEL_MAPPINGS: Record<ProviderType, Record<string, string>> = {
     "claude-haiku": "claude-3-5-haiku-20241022",
   },
   bedrock: {
-    default: "anthropic.claude-sonnet-4-20250514-v1:0",
-    "claude-sonnet": "anthropic.claude-sonnet-4-20250514-v1:0",
-    "claude-opus": "anthropic.claude-opus-4-20250514-v1:0",
-    "claude-haiku": "anthropic.claude-3-5-haiku-20241022-v1:0",
+    default: "us.anthropic.claude-sonnet-4-20250514-v1:0",
+    "claude-sonnet": "us.anthropic.claude-sonnet-4-20250514-v1:0",
+    "claude-opus": "us.anthropic.claude-opus-4-5-20251101-v1:0",
+    "claude-haiku": "us.anthropic.claude-3-5-haiku-20241022-v1:0",
   },
   openrouter: {
     default: "meta-llama/llama-3.3-70b-instruct:free",
