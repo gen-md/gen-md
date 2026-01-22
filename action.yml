@@ -1,0 +1,64 @@
+name: 'git gen'
+description: 'Generate code from feature descriptions using git context'
+branding:
+  icon: 'git-branch'
+  color: 'orange'
+
+inputs:
+  feature:
+    description: 'Feature description to generate'
+    required: true
+  branch:
+    description: 'Branch name (optional, auto-generated if not provided)'
+    required: false
+  dry-run:
+    description: 'Show plan without generating files'
+    required: false
+    default: 'false'
+  anthropic-api-key:
+    description: 'Anthropic API key'
+    required: true
+
+outputs:
+  branch:
+    description: 'Branch name where files were generated'
+    value: ${{ steps.gen.outputs.branch }}
+  files:
+    description: 'List of generated files'
+    value: ${{ steps.gen.outputs.files }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install gitgen
+      shell: bash
+      run: npm install -g gitgen
+
+    - name: Generate
+      id: gen
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+      run: |
+        ARGS=""
+        if [ -n "${{ inputs.branch }}" ]; then
+          ARGS="-b ${{ inputs.branch }}"
+        fi
+        if [ "${{ inputs.dry-run }}" = "true" ]; then
+          ARGS="$ARGS --dry-run"
+        fi
+
+        git gen $ARGS "${{ inputs.feature }}" | tee output.txt
+
+        # Extract branch name
+        BRANCH=$(git branch --show-current)
+        echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+        # Extract generated files
+        FILES=$(grep -E '^\s+\+' output.txt | sed 's/^\s*+ //' | tr '\n' ' ' || echo "")
+        echo "files=$FILES" >> $GITHUB_OUTPUT

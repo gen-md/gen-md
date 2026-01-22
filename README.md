@@ -74,4 +74,36 @@ Generate a README with project overview and usage.
 
 `output` (required) · `context` (files to include) · `model` (default: claude-sonnet-4-20250514)
 
+## GitHub Action
+
+Generate directly from GitHub without local setup:
+
+```yaml
+# .github/workflows/gen.yml
+on:
+  workflow_dispatch:
+    inputs:
+      feature:
+        description: 'Feature to generate'
+        required: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 20
+      - uses: gitgen/gitgen@main
+        with:
+          feature: ${{ inputs.feature }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+```
+
+Trigger via GitHub UI (Actions → Run workflow) or CLI:
+
+```bash
+gh workflow run gen.yml -f feature="add user authentication"
+```
+
 MIT
