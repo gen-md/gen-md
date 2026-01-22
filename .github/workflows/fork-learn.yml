@@ -1,4 +1,14 @@
 # Fork a public repo, analyze it, and create a PR with .gitgen.md
+#
+# Setup: Add these secrets to your GitHub account (Settings > Secrets > Actions):
+#   - ANTHROPIC_API_KEY (Anthropic)
+#   - OPENAI_API_KEY (OpenAI)
+#   - OPENROUTER_API_KEY (OpenRouter - has free tier)
+#   - GOOGLE_GENERATIVE_AI_API_KEY (Google AI)
+#   - AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY (AWS Bedrock)
+#
+# These secrets work across all your repos once set at the account level.
+
 name: Fork & Learn
 
 on:
@@ -17,9 +27,11 @@ on:
         required: false
         type: choice
         options:
-          - anthropic
-          - bedrock
           - openrouter
+          - anthropic
+          - openai
+          - google
+          - bedrock
         default: openrouter
 
 jobs:
@@ -59,9 +71,6 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install gitgen
-        run: npm install -g gitgen
-
       - name: Configure git
         working-directory: ${{ steps.parse.outputs.name }}
         run: |
@@ -77,16 +86,23 @@ jobs:
         working-directory: ${{ steps.parse.outputs.name }}
         env:
           GITGEN_PROVIDER: ${{ inputs.provider }}
+          # Anthropic
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # OpenAI
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Google AI
+          GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+          # OpenRouter (free tier available)
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          # AWS Bedrock
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
         run: |
           if [ -n "${{ inputs.prompt }}" ]; then
-            git gen learn --prompt "${{ inputs.prompt }}"
+            npx gitgen learn --prompt "${{ inputs.prompt }}"
           else
-            git gen learn
+            npx gitgen learn
           fi
 
       - name: Commit and push
@@ -118,17 +134,17 @@ jobs:
 
           ## What is gitgen?
 
-          gitgen is a predictive git tool that generates code matching your codebase patterns.
+          gitgen is a CLI tool that generates code matching your codebase patterns.
 
           With this \`.gitgen.md\` file, contributors can use:
           \`\`\`bash
-          git gen \"add new feature\"
+          npx gitgen \"add new feature\"
           \`\`\`
 
           to generate code that matches your project's style.
 
           ---
-          Generated with gitgen"
+          Generated with [gitgen](https://github.com/gitgen/gitgen)"
 
       - name: Summary
         run: |

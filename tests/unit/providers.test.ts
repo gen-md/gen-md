@@ -62,11 +62,11 @@ describe("Provider Configuration", () => {
       expect(config.provider).toBe("bedrock");
     });
 
-    it("should prioritize openrouter over anthropic when both available", () => {
+    it("should prioritize anthropic over openrouter when both available", () => {
       process.env.OPENROUTER_API_KEY = "sk-or-test";
       process.env.ANTHROPIC_API_KEY = "sk-test";
       const config = getProviderConfig();
-      expect(config.provider).toBe("openrouter");
+      expect(config.provider).toBe("anthropic");
     });
   });
 
@@ -79,9 +79,9 @@ describe("Provider Configuration", () => {
 
     it("should resolve model aliases for bedrock", () => {
       expect(resolveModel("claude-sonnet", "bedrock")).toBe(
-        "anthropic.claude-sonnet-4-20250514-v1:0"
+        "us.anthropic.claude-sonnet-4-20250514-v1:0"
       );
-      expect(resolveModel("claude-opus", "bedrock")).toBe("anthropic.claude-opus-4-20250514-v1:0");
+      expect(resolveModel("claude-opus", "bedrock")).toBe("us.anthropic.claude-opus-4-5-20251101-v1:0");
     });
 
     it("should resolve model aliases for openrouter", () => {
@@ -96,7 +96,7 @@ describe("Provider Configuration", () => {
 
     it("should return default model when alias is undefined", () => {
       expect(resolveModel(undefined, "anthropic")).toBe("claude-sonnet-4-20250514");
-      expect(resolveModel(undefined, "bedrock")).toBe("anthropic.claude-sonnet-4-20250514-v1:0");
+      expect(resolveModel(undefined, "bedrock")).toBe("us.anthropic.claude-sonnet-4-20250514-v1:0");
       expect(resolveModel(undefined, "openrouter")).toBe("meta-llama/llama-3.3-70b-instruct:free");
     });
   });

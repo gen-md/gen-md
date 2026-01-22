@@ -51,7 +51,7 @@ describe("git gen CLI", () => {
   describe("--help", () => {
     it("shows usage information", () => {
       const output = runGitgen("--help", testDir);
-      expect(output).toContain("git gen");
+      expect(output).toContain("gitgen");
       expect(output).toContain("Usage:");
       expect(output).toContain("learn");
       expect(output).toContain("merge");
