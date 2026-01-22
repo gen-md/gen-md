@@ -457,129 +457,131 @@ function resolveSpecPath(pathArg: string): string {
   throw new Error(`No .gitgen.md found in ${pathArg === "." ? "current directory" : pathArg}`);
 }
 
-// === FORK WORKFLOW ===
+// === MERGE ===
 
-async function forkAndLearn(repoArg: string, customPrompt?: string): Promise<void> {
-  // Parse repo argument (owner/repo or full URL)
-  let owner: string;
-  let repo: string;
+interface MergePlan {
+  strategy: "select" | "join" | "hybrid";
+  analysis: {
+    branch1Summary: string;
+    branch2Summary: string;
+    conflicts: string[];
+    resolution: string;
+  };
+  files: Array<{
+    path: string;
+    action: "create" | "modify" | "delete";
+    source: string;
+    description: string;
+  }>;
+  commands: string[];
+}
 
-  if (repoArg.includes("github.com")) {
-    const match = repoArg.match(/github\.com\/([^/]+)\/([^/]+)/);
-    if (!match) {
-      throw new Error(`Invalid GitHub URL: ${repoArg}`);
+function getBranchDiff(branch: string, baseBranch: string): string {
+  // Get the diff between branch and base
+  const diff = git(`diff ${baseBranch}...${branch} --stat`);
+  const files = git(`diff ${baseBranch}...${branch} --name-only`);
+  const commits = git(`log ${baseBranch}..${branch} --pretty=format:"%h %s" --no-merges`);
+
+  return `Branch: ${branch}
+Commits:
+${commits || "(no commits)"}
+
+Files changed:
+${files || "(no files)"}
+
+Diff summary:
+${diff || "(no diff)"}`;
+}
+
+async function mergeBranches(
+  branches: string[],
+  instruction: string,
+  options: GenOptions = {}
+): Promise<void> {
+  if (branches.length < 2) {
+    throw new Error("Merge requires at least 2 branches");
+  }
+
+  const template = await loadPrompt("merge");
+  const currentBranch = git("branch --show-current");
+  const baseBranch = git("rev-parse --abbrev-ref HEAD");
+
+  // Get diff info for each branch
+  const branchInfo: string[] = [];
+  for (const branch of branches) {
+    if (!branchExists(branch)) {
+      throw new Error(`Branch not found: ${branch}`);
     }
-    owner = match[1];
-    repo = match[2].replace(/\.git$/, "");
-  } else if (repoArg.includes("/")) {
-    [owner, repo] = repoArg.split("/");
-  } else {
-    throw new Error(`Invalid repository format. Use owner/repo or GitHub URL`);
+    branchInfo.push(getBranchDiff(branch, baseBranch));
   }
 
-  console.log(`→ Forking ${owner}/${repo}...`);
+  // Get project context
+  const allFiles = git("ls-files").split("\n").filter(Boolean);
+  const contextFiles = getProjectContext(allFiles);
+  const projectContext = await readFilesSafe(contextFiles);
 
-  // Check if gh CLI is available
-  try {
-    execSync("gh --version", { stdio: "ignore" });
-  } catch {
-    throw new Error("GitHub CLI (gh) is required. Install: https://cli.github.com");
+  const prompt = renderPrompt(template, {
+    instruction,
+    branches: branchInfo.join("\n\n---\n\n"),
+    currentBranch,
+    projectContext,
+  });
+
+  console.log(`→ Analyzing ${branches.length} branches...`);
+  const response = await llm(prompt);
+
+  // Parse JSON response
+  const jsonMatch = response.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("Failed to parse merge plan");
+
+  const plan = JSON.parse(jsonMatch[0]) as MergePlan;
+
+  console.log(`→ Strategy: ${plan.strategy}`);
+  console.log(`→ Analysis:`);
+  for (let i = 0; i < branches.length; i++) {
+    const key = `branch${i + 1}Summary` as keyof typeof plan.analysis;
+    if (plan.analysis[key]) {
+      console.log(`  ${branches[i]}: ${plan.analysis[key]}`);
+    }
   }
 
-  // Fork the repository
-  try {
-    execSync(`gh repo fork ${owner}/${repo} --clone=true`, { stdio: "inherit" });
-  } catch {
-    // Fork might already exist, try to clone it
-    const username = execSync("gh api user -q .login", { encoding: "utf-8" }).trim();
-    console.log(`→ Fork may exist, cloning ${username}/${repo}...`);
-    execSync(`gh repo clone ${username}/${repo}`, { stdio: "inherit" });
+  if (plan.analysis.conflicts.length > 0) {
+    console.log(`→ Conflicts detected:`);
+    for (const conflict of plan.analysis.conflicts) {
+      console.log(`  - ${conflict}`);
+    }
+    console.log(`→ Resolution: ${plan.analysis.resolution}`);
   }
 
-  // Change to repo directory
-  process.chdir(repo);
-  console.log(`→ Changed to ${repo}/`);
-
-  // Create a new branch for the spec
-  const branchName = "gitgen-spec";
-  git(`checkout -b ${branchName}`);
-  console.log(`→ Created branch: ${branchName}`);
-
-  // Run learn command
-  console.log(`→ Analyzing repository...`);
-  const summary = await getRepoSummary();
-  console.log(summary);
-  console.log(`→ Generating spec...`);
-  const spec = await generateProjectSpec(customPrompt);
-
-  // Validate the generated spec
-  const validation = validateOutput(spec, { type: "spec" });
-  if (!validation.valid) {
-    console.error(formatValidationResult(validation, ".gitgen.md"));
+  console.log(`→ Files to merge:`);
+  for (const file of plan.files) {
+    const symbol = file.action === "delete" ? "-" : file.action === "create" ? "+" : "~";
+    console.log(`  ${symbol} ${file.path} (from ${file.source})`);
   }
 
-  await writeFile(".gitgen.md", spec, "utf-8");
-  console.log(`✓ Created .gitgen.md`);
-
-  // Commit and push
-  git("add .gitgen.md");
-  git('commit -m "Add .gitgen.md specification"');
-  console.log(`→ Committed .gitgen.md`);
-
-  // Push to fork
-  execSync(`git push -u origin ${branchName}`, { stdio: "inherit" });
-  console.log(`→ Pushed to origin/${branchName}`);
-
-  // Create PR
-  console.log(`→ Creating pull request...`);
-  const prBody = `## Summary
-
-This PR adds a \`.gitgen.md\` specification file generated by [gitgen](https://github.com/gitgen/gitgen).
-
-The spec captures:
-- Project patterns and conventions
-- Tech stack detection
-- Directory structure
-- Coding style guidelines
-
-## What is gitgen?
-
-gitgen is a predictive git tool that generates code matching your codebase patterns.
-
-With this \`.gitgen.md\` file, contributors can use:
-\`\`\`bash
-git gen "add new feature"
-\`\`\`
-
-to generate code that matches your project's style.
-
----
-Generated with gitgen`;
-
-  try {
-    execSync(
-      `gh pr create --title "Add .gitgen.md specification" --body "${prBody.replace(/"/g, '\\"')}"`,
-      { stdio: "inherit" }
-    );
-    console.log(`✓ Pull request created!`);
-  } catch {
-    console.log(`→ Could not create PR automatically. Create it manually:`);
-    console.log(`  gh pr create --title "Add .gitgen.md specification"`);
+  // Dry run: show plan and exit
+  if (options.dryRun) {
+    console.log(`\n→ Commands that would be executed:`);
+    for (const cmd of plan.commands) {
+      console.log(`  ${cmd}`);
+    }
+    console.log(`\n(dry run - no changes made)`);
+    return;
   }
 
-  // Print summary
-  const username = execSync("gh api user -q .login", { encoding: "utf-8" }).trim();
-  console.log(`
-✓ Fork workflow complete!
+  // Execute merge commands
+  console.log(`→ Executing merge...`);
+  for (const cmd of plan.commands) {
+    console.log(`  $ ${cmd}`);
+    try {
+      execSync(cmd, { stdio: "inherit" });
+    } catch (error) {
+      console.error(`  ✗ Command failed: ${cmd}`);
+      throw error;
+    }
+  }
 
-Your fork: https://github.com/${username}/${repo}
-Branch: ${branchName}
-
-Next steps:
-1. Review the generated .gitgen.md
-2. Test with: git gen "add a feature"
-3. Submit the PR to ${owner}/${repo}
-`);
+  console.log(`\n✓ Merge complete`);
 }
 
 // === CLI ===
@@ -588,47 +590,32 @@ function printUsage(): void {
   console.log(`git gen - Predictive git
 
 Usage:
-  git gen "feature description"  Generate files for a feature
+  git gen learn                  Analyze repo, create .gitgen.md
+  git gen "feature"              Generate files for a feature
   git gen -b <branch> "feature"  Create branch, then generate
+  git gen merge <branches> "instruction"
+                                 Combine branches intelligently
   git gen .                      Generate from .gitgen.md spec
   git gen diff .                 Preview spec generation
   git gen init <file>            Create spec from existing file
-  git gen learn                  Analyze repo, create .gitgen.md
-  git gen fork <repo>            Fork repo, run learn, create PR
-  git gen test                   Run all tests
-  git gen test --unit            Run unit tests only
-  git gen test --e2e             Run E2E tests (CLI + web)
-  git gen test --cli             Run CLI E2E tests only
-  git gen test --web             Run Playwright web tests only
-  git gen test --workflow        Generate GitHub Actions test workflow
 
 Options:
   -b <branch>                    Create/switch to branch before generating
-  --dry-run                      Show plan without generating files
+  --dry-run                      Show plan without making changes
   --prompt "instructions"        Add custom instructions to any command
 
 Examples:
+  git gen learn                  Learn project patterns
   git gen "add dark mode"        Generate on current branch
   git gen -b feature/auth "add auth"
                                  Create branch + generate
-  git gen "add password reset"   Add more to current branch
-  git gen --dry-run "add api"    Preview what would be generated
-  git gen learn                  Learn project patterns
-  git gen learn --prompt "focus on React patterns"
-                                 Learn with custom focus
-  git gen fork owner/repo        Fork and analyze a public repo
-  git gen test                   Run all tests
-  git gen test --e2e             Run E2E tests with screenshots
+  git gen merge feature/a feature/b "pick cleaner impl"
+                                 Select best from branches
 
 Environment (pick one):
   ANTHROPIC_API_KEY              Anthropic API key
   OPENROUTER_API_KEY             OpenRouter API key
-  AWS_ACCESS_KEY_ID +            AWS Bedrock credentials
-  AWS_SECRET_ACCESS_KEY
-
-Optional:
-  GITGEN_PROVIDER                Force provider: anthropic, bedrock, openrouter
-  GITGEN_MODEL                   Model alias: claude-sonnet, claude-opus, claude-haiku
+  AWS_ACCESS_KEY_ID              AWS Bedrock credentials
 
 Provider: ${getProviderDescription()}
 `);
@@ -680,13 +667,20 @@ async function main(): Promise<void> {
 
       await writeFile(".gitgen.md", spec, "utf-8");
       console.log(`✓ Created .gitgen.md`);
-    } else if (command === "fork") {
-      const repoArg = positional[1];
-      if (!repoArg) {
-        console.error("Error: No repository provided (e.g., owner/repo)");
+    } else if (command === "merge") {
+      // git gen merge branch1 branch2 [branch3...] "instruction"
+      // Last positional arg is the instruction, rest are branches
+      const mergeArgs = positional.slice(1);
+      if (mergeArgs.length < 3) {
+        console.error("Error: merge requires at least 2 branches and an instruction");
+        console.error("Usage: git gen merge <branch1> <branch2> [branch3...] \"instruction\"");
         process.exit(1);
       }
-      await forkAndLearn(repoArg, customPrompt);
+
+      const instruction = mergeArgs[mergeArgs.length - 1];
+      const branches = mergeArgs.slice(0, -1);
+
+      await mergeBranches(branches, instruction, { dryRun });
     } else if (command === "test") {
       const unit = args.includes("--unit");
       const e2e = args.includes("--e2e");
