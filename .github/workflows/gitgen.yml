@@ -196,8 +196,8 @@ jobs:
           DRY_RUN="${{ inputs.dry_run }}"
           PROMPT="${{ inputs.custom_prompt }}"
 
-          # Build command
-          CMD="git gen"
+          # Build command (npx for CI, users run 'git gen' locally after install)
+          CMD="npx gitgen"
 
           case "$COMMAND" in
             generate)

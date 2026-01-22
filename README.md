@@ -3,6 +3,7 @@
 Generate code with git.
 
 ```bash
+npm install -g gitgen
 git gen
 ```
 
