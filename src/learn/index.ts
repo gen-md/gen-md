@@ -1,7 +1,12 @@
 import { execSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { llm } from "../providers/index.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const PROMPTS_DIR = join(__dirname, "..", "..", "prompts");
 
 export interface CommitInfo {
   hash: string;
@@ -245,65 +250,19 @@ function renderPrompt(template: string, vars: Record<string, string | undefined>
 }
 
 /**
+ * Load a prompt template from the prompts directory.
+ */
+async function loadPrompt(name: string): Promise<string> {
+  const promptPath = join(PROMPTS_DIR, `${name}.md`);
+  return readFile(promptPath, "utf-8");
+}
+
+/**
  * Generate a .gitgen.md specification for the repository.
  */
 export async function generateProjectSpec(customPrompt?: string): Promise<string> {
   const analysis = await analyzeRepo(50);
-
-  const template = `Analyze this repository and create a .gitgen.md specification.
-
-<tech-stack>{{techStack}}</tech-stack>
-
-<conventions>
-Commit style: {{commitStyle}}
-Naming patterns:
-{{namingPatterns}}
-Directory patterns:
-{{directoryPatterns}}
-</conventions>
-
-<recent-commits>
-{{recentCommits}}
-</recent-commits>
-
-{{#recentDiffs}}
-<recent-diffs>
-{{recentDiffs}}
-</recent-diffs>
-{{/recentDiffs}}
-
-<key-files>
-{{keyFiles}}
-</key-files>
-
-<file-structure>
-{{fileStructure}}
-</file-structure>
-
-Create a .gitgen.md file. The file MUST follow this EXACT format:
-
----
-output:
-context:
-  - ./package.json
-  - ./README.md
----
-
-[Instructions for generating new features go here]
-
-REQUIREMENTS:
-1. Start with exactly "---" on the first line
-2. Include "output:" field (leave value empty)
-3. Include "context:" with relevant file paths as a YAML array
-4. End frontmatter with exactly "---" on its own line
-5. After the closing "---", write instructions describing:
-   - What the project does
-   - Tech stack: {{techStack}}
-   - Coding conventions and patterns
-   - Directory structure guidance
-   - How new features should match existing patterns
-
-Output ONLY the .gitgen.md content. No markdown code fences. Start with ---`;
+  const template = await loadPrompt("learn");
 
   let prompt = renderPrompt(template, {
     techStack: analysis.techStack.join(", ") || "not detected",
@@ -326,10 +285,14 @@ Output ONLY the .gitgen.md content. No markdown code fences. Start with ---`;
   });
 
   if (customPrompt) {
-    prompt += `\n\nADDITIONAL INSTRUCTIONS:\n${customPrompt}`;
+    prompt += `\n\nADDITIONAL FOCUS:\n${customPrompt}`;
   }
 
-  return llm(prompt);
+  const result = await llm(prompt);
+
+  // Fix common YAML formatting issues from LLMs
+  // Fix "  -./file" to "  - ./file" (missing space after dash)
+  return result.replace(/^(\s*)-(\.\/.*)$/gm, "$1- $2");
 }
 
 /**
