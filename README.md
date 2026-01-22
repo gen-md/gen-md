@@ -3,76 +3,30 @@
 Generate code that matches your codebase patterns.
 
 ```bash
+# Clone any repo
+git clone https://github.com/vercel/next.js
+cd next.js
+
+# Learn its patterns
+git gen learn
+
+# Generate new features that match
+git gen -b feature/analytics "add analytics middleware"
+```
+
+## Install
+
+```bash
 npm install -g gitgen
 ```
 
-## How It Works
-
-1. **Learn** your codebase patterns
-2. **Generate** new code that follows them
-3. **Merge** branches intelligently
-
-## Usage
-
-### Learn a Codebase
+## Quick Start
 
 ```bash
-git gen learn
-# → Analyzing repository...
-# → Created .gitgen.md
-```
-
-Creates a `.gitgen.md` spec capturing your naming conventions, directory structure, and coding patterns.
-
-### Generate Features
-
-```bash
-git gen "add JWT authentication"
-# → Generating files...
-#   + src/middleware/auth.ts
-#   + src/routes/login.ts
-# → Created 2 files
-
-# Or create a branch first
-git gen -b feature/auth "add JWT authentication"
-```
-
-### Merge Branches
-
-Compare and combine branches with AI assistance:
-
-```bash
-# Pick the better implementation
-git gen merge feature/auth-v1 feature/auth-v2 "pick the simpler one"
-
-# Combine complementary features
-git gen merge feature/auth feature/dashboard "integrate auth into dashboard"
-```
-
-### Generate from Specs
-
-```bash
-# Generate from a spec file
-git gen README.gitgen.md
-
-# Preview without writing
-git gen diff README.gitgen.md
-
-# Create a spec from an existing file
-git gen init src/utils.ts
-```
-
-## Spec Format
-
-```yaml
----
-output: README.md
-context:
-  - ./package.json
-  - ./src/index.ts
----
-
-Generate a README with project overview and usage.
+git clone https://github.com/your-org/your-repo
+cd your-repo
+git gen learn                              # Learn codebase patterns
+git gen -b feature/auth "add JWT auth"     # Generate matching code
 ```
 
 ## Commands
@@ -100,53 +54,71 @@ Generate a README with project overview and usage.
 Set one of these environment variables:
 
 ```bash
-# Anthropic
-export ANTHROPIC_API_KEY=sk-...
+export ANTHROPIC_API_KEY=sk-...          # Anthropic
+export OPENAI_API_KEY=sk-...             # OpenAI
+export GOOGLE_GENERATIVE_AI_API_KEY=...  # Google AI
+export OPENROUTER_API_KEY=sk-or-...      # OpenRouter (free tier)
 
-# OpenAI
-export OPENAI_API_KEY=sk-...
-
-# Google AI
-export GOOGLE_GENERATIVE_AI_API_KEY=...
-
-# AWS Bedrock
+# Or AWS Bedrock
 export AWS_ACCESS_KEY_ID=...
 export AWS_SECRET_ACCESS_KEY=...
-
-# OpenRouter (free tier available)
-export OPENROUTER_API_KEY=sk-or-...
 ```
 
-Optional: override provider/model with `GITGEN_PROVIDER` and `GITGEN_MODEL`.
+Override with `GITGEN_PROVIDER` and `GITGEN_MODEL`.
 
-## Examples
+## Usage
 
-### Prototype and Compare
+### Learn and Generate
+
+```bash
+git gen learn
+# → Analyzing repository...
+# → Created .gitgen.md
+
+git gen "add user authentication"
+# → Generating files...
+#   + src/middleware/auth.ts
+#   + src/routes/login.ts
+# → Created 2 files
+```
+
+### Compare Branches
 
 ```bash
 git gen -b feature/cache-redis "add Redis caching"
 git gen -b feature/cache-memory "add in-memory cache"
 
-# Test both, then merge the winner
-git gen merge feature/cache-redis feature/cache-memory "use redis"
+# Pick the better one
+git gen merge feature/cache-redis feature/cache-memory "use the faster implementation"
 ```
 
-### Resolve Merge Conflicts
+### Resolve Conflicts
 
 ```bash
 git merge feature/user-profile
 # CONFLICT: src/api/users.ts
 
 git merge --abort
-git gen merge main feature/user-profile "prefer feature branch for new fields"
+git gen merge main feature/user-profile "keep both changes, prefer feature for new fields"
 ```
 
-### Onboard to a New Codebase
+### Spec Files
+
+```yaml
+---
+output: README.md
+context:
+  - ./package.json
+  - ./src/index.ts
+---
+
+Generate a README with project overview and usage.
+```
 
 ```bash
-git clone git@company.com:team/app.git && cd app
-git gen learn
-git gen -b feature/my-first-pr "add health check endpoint"
+git gen README.gitgen.md     # Generate from spec
+git gen diff README.gitgen.md # Preview first
+git gen init src/utils.ts     # Create spec from file
 ```
 
 MIT
