@@ -53,6 +53,8 @@ $ git add . && git commit -m "feat: auth with password reset" && git push
 | `git gen init <file>` | Create spec from existing file |
 | `git gen learn` | Analyze repo, create `.gitgen.md` |
 | `git gen fork <repo>` | Fork repo, analyze, create PR |
+| `git gen test` | Run all tests |
+| `git gen test --e2e` | Run E2E tests with screenshots |
 
 ### Options
 
@@ -300,6 +302,56 @@ git gen learn --prompt "include onboarding tips for new developers"
 
 # New team members can generate code matching team patterns
 git gen "add new API endpoint" --prompt "follow team conventions"
+```
+
+## Testing
+
+gitgen includes a built-in test runner for comprehensive testing with screenshot support:
+
+```bash
+# Run all tests
+git gen test
+
+# Run specific test types
+git gen test --unit            # Unit tests only
+git gen test --e2e             # All E2E tests (CLI + web)
+git gen test --cli             # CLI E2E tests only
+git gen test --web             # Playwright web tests only
+
+# Generate GitHub Actions workflow
+git gen test --workflow
+```
+
+### Test Types
+
+| Type | Framework | Description |
+|------|-----------|-------------|
+| Unit | Vitest | Fast isolated tests for core functions |
+| CLI E2E | Vitest | End-to-end tests for CLI commands |
+| Web E2E | Playwright | Browser tests with screenshot capture |
+
+### Screenshots in CI
+
+E2E tests automatically capture screenshots and upload them as GitHub Actions artifacts:
+
+```yaml
+# Screenshots uploaded to:
+# Actions → Run → Artifacts → playwright-screenshots
+```
+
+Screenshots are captured at key states during tests and retained for 30 days.
+
+### Running Tests Locally
+
+```bash
+# Install Playwright browsers (first time only)
+npx playwright install
+
+# Run all tests
+npm test
+
+# Run with API key for integration tests
+OPENROUTER_API_KEY=... npm run test:e2e:cli
 ```
 
 MIT

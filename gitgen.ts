@@ -595,6 +595,12 @@ Usage:
   git gen init <file>            Create spec from existing file
   git gen learn                  Analyze repo, create .gitgen.md
   git gen fork <repo>            Fork repo, run learn, create PR
+  git gen test                   Run all tests
+  git gen test --unit            Run unit tests only
+  git gen test --e2e             Run E2E tests (CLI + web)
+  git gen test --cli             Run CLI E2E tests only
+  git gen test --web             Run Playwright web tests only
+  git gen test --workflow        Generate GitHub Actions test workflow
 
 Options:
   -b <branch>                    Create/switch to branch before generating
@@ -611,6 +617,8 @@ Examples:
   git gen learn --prompt "focus on React patterns"
                                  Learn with custom focus
   git gen fork owner/repo        Fork and analyze a public repo
+  git gen test                   Run all tests
+  git gen test --e2e             Run E2E tests with screenshots
 
 Environment (pick one):
   ANTHROPIC_API_KEY              Anthropic API key
@@ -679,6 +687,48 @@ async function main(): Promise<void> {
         process.exit(1);
       }
       await forkAndLearn(repoArg, customPrompt);
+    } else if (command === "test") {
+      const unit = args.includes("--unit");
+      const e2e = args.includes("--e2e");
+      const cli = args.includes("--cli");
+      const web = args.includes("--web");
+      const workflow = args.includes("--workflow");
+
+      if (workflow) {
+        // Check if workflow already exists
+        const workflowPath = ".github/workflows/test.yml";
+        if (existsSync(workflowPath)) {
+          console.log(`→ Workflow already exists at ${workflowPath}`);
+        } else {
+          console.log(`→ Creating test workflow...`);
+          console.log(`  Copy from: https://github.com/gitgen/gitgen/blob/main/.github/workflows/test.yml`);
+        }
+        return;
+      }
+
+      // Determine which tests to run
+      const testCommands: string[] = [];
+
+      if (unit || (!e2e && !cli && !web)) {
+        testCommands.push("npm run test:unit");
+      }
+      if (e2e || cli) {
+        testCommands.push("npm run test:e2e:cli");
+      }
+      if (e2e || web) {
+        testCommands.push("npm run test:e2e:web");
+      }
+
+      for (const cmd of testCommands) {
+        console.log(`→ Running: ${cmd}`);
+        try {
+          execSync(cmd, { stdio: "inherit" });
+        } catch {
+          console.error(`✗ Test command failed: ${cmd}`);
+          process.exit(1);
+        }
+      }
+      console.log(`\n✓ All tests passed`);
     } else if (command === "init") {
       const filePath = positional[1];
       if (!filePath) {

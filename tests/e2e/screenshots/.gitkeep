@@ -1,0 +1,2 @@
+# This directory stores Playwright screenshots from E2E tests.
+# Screenshots are uploaded as artifacts in GitHub Actions.
