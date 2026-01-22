@@ -3,7 +3,7 @@
 Generate code with git.
 
 ```bash
-npx gitgen
+git gen
 ```
 
 Requires an API key from Anthropic, OpenAI, Google AI, OpenRouter, or AWS Bedrock. See [Setup](#setup).
@@ -16,20 +16,20 @@ git clone https://github.com/vercel/next.js
 cd next.js
 
 # Analyze the codebase
-npx gitgen learn
+git gen learn
 # → Analyzing repository...
 # → Created .gitgen.md
 
 # Generate two approaches on separate branches
-npx gitgen -b feature/analytics-v1 "add analytics middleware using cookies"
-npx gitgen -b feature/analytics-v2 "add analytics middleware using local storage"
+git gen -b feature/analytics-v1 "add analytics middleware using cookies"
+git gen -b feature/analytics-v2 "add analytics middleware using local storage"
 
 # Test each
 git checkout feature/analytics-v1 && npm test
 git checkout feature/analytics-v2 && npm test
 
 # Merge the better one
-npx gitgen merge feature/analytics-v1 feature/analytics-v2 "pick the cleaner implementation"
+git gen merge feature/analytics-v1 feature/analytics-v2 "pick the cleaner implementation"
 ```
 
 ### What `learn` creates
@@ -66,13 +66,13 @@ This spec tells gitgen how to generate code that matches your codebase.
 
 | Command | Description |
 |---------|-------------|
-| `npx gitgen learn` | Analyze repo, create `.gitgen.md` |
-| `npx gitgen "feature"` | Generate files for a feature |
-| `npx gitgen -b <branch> "feature"` | Create branch, then generate |
-| `npx gitgen merge <branches...> "instruction"` | Compare/combine branches |
-| `npx gitgen <spec>.gitgen.md` | Generate from spec file |
-| `npx gitgen diff <spec>` | Preview generation |
-| `npx gitgen init <file>` | Create spec from existing file |
+| `git gen learn` | Analyze repo, create `.gitgen.md` |
+| `git gen "feature"` | Generate files for a feature |
+| `git gen -b <branch> "feature"` | Create branch, then generate |
+| `git gen merge <branches...> "instruction"` | Compare/combine branches |
+| `git gen <spec>.gitgen.md` | Generate from spec file |
+| `git gen diff <spec>` | Preview generation |
+| `git gen init <file>` | Create spec from existing file |
 
 ### Options
 
@@ -111,36 +111,35 @@ Add your API key as a GitHub secret at **Settings > Secrets > Actions**:
 
 Secrets set at the account level work across all your repos.
 
-### Fork & Learn any repo
+### Running commands
 
-Copy [`.github/workflows/fork-learn.yml`](.github/workflows/fork-learn.yml) to your repo, then:
+Copy [`.github/workflows/gitgen.yml`](.github/workflows/gitgen.yml) to your repo, then:
 
-1. Go to **Actions > Fork & Learn**
-2. Enter a repo like `vercel/next.js`
+1. Go to **Actions > gitgen**
+2. Select a command and fill in the required fields
 3. Run workflow
 
-This forks the repo, runs `npx gitgen learn`, and creates a PR with the `.gitgen.md` file.
+| Command | Description | Required fields |
+|---------|-------------|-----------------|
+| `generate` | Generate feature code | feature |
+| `learn` | Analyze repo, create .gitgen.md | - |
+| `merge` | Combine branches | merge_branches, feature (instruction) |
+| `init` | Create spec from file | spec |
+| `diff` | Preview spec generation | spec |
+| `fork-learn` | Fork repo and learn | repo (owner/repo) |
 
-### Generate features
-
-Copy [`.github/workflows/gen.yml`](.github/workflows/gen.yml) to your repo, then:
-
-1. Go to **Actions > git gen**
-2. Enter a feature like "add user authentication"
-3. Run workflow
-
-Creates a PR with the generated code.
+All commands create a PR with the changes (except `diff` which previews only).
 
 ## Usage
 
 ### Compare Branches
 
 ```bash
-npx gitgen -b feature/cache-redis "add Redis caching"
-npx gitgen -b feature/cache-memory "add in-memory cache"
+git gen -b feature/cache-redis "add Redis caching"
+git gen -b feature/cache-memory "add in-memory cache"
 
 # Pick the better one
-npx gitgen merge feature/cache-redis feature/cache-memory "use the faster implementation"
+git gen merge feature/cache-redis feature/cache-memory "use the faster implementation"
 ```
 
 ### Resolve Conflicts
@@ -150,7 +149,7 @@ git merge feature/user-profile
 # CONFLICT: src/api/users.ts
 
 git merge --abort
-npx gitgen merge main feature/user-profile "keep both changes, prefer feature for new fields"
+git gen merge main feature/user-profile "keep both changes, prefer feature for new fields"
 ```
 
 ### Spec Files
@@ -167,9 +166,9 @@ Generate a README with project overview and usage.
 ```
 
 ```bash
-npx gitgen README.gitgen.md     # Generate from spec
-npx gitgen diff README.gitgen.md # Preview first
-npx gitgen init src/utils.ts     # Create spec from file
+git gen README.gitgen.md     # Generate from spec
+git gen diff README.gitgen.md # Preview first
+git gen init src/utils.ts     # Create spec from file
 ```
 
 MIT

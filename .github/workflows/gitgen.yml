@@ -1,0 +1,395 @@
+# Universal gitgen workflow - copy to your repo's .github/workflows/
+#
+# Setup: Add these secrets to your GitHub account (Settings > Secrets > Actions):
+#   - ANTHROPIC_API_KEY (Anthropic)
+#   - OPENAI_API_KEY (OpenAI)
+#   - OPENROUTER_API_KEY (OpenRouter - has free tier)
+#   - GOOGLE_GENERATIVE_AI_API_KEY (Google AI)
+#   - AWS_ACCESS_KEY_ID + AWS_SECRET_ACCESS_KEY (AWS Bedrock)
+#
+# These secrets work across all your repos once set at the account level.
+
+name: gitgen
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Command to run'
+        required: true
+        type: choice
+        options:
+          - generate
+          - learn
+          - merge
+          - init
+          - diff
+          - fork-learn
+        default: generate
+      feature:
+        description: 'Feature description (for generate/merge)'
+        required: false
+        type: string
+      branch:
+        description: 'Branch name (auto-generated if empty)'
+        required: false
+        type: string
+      spec:
+        description: 'Spec file path (for init/diff)'
+        required: false
+        type: string
+      repo:
+        description: 'Repository to fork (owner/repo) - for fork-learn'
+        required: false
+        type: string
+      merge_branches:
+        description: 'Branches to merge (space-separated) - for merge'
+        required: false
+        type: string
+      provider:
+        description: 'LLM Provider'
+        required: false
+        type: choice
+        options:
+          - auto
+          - anthropic
+          - openai
+          - openrouter
+          - google
+          - bedrock
+        default: auto
+      dry_run:
+        description: 'Preview without making changes'
+        required: false
+        type: boolean
+        default: false
+      custom_prompt:
+        description: 'Additional instructions'
+        required: false
+        type: string
+
+env:
+  # Provider credentials (set at account or repo level)
+  ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+  GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  GITGEN_PROVIDER: ${{ inputs.provider != 'auto' && inputs.provider || '' }}
+
+jobs:
+  gitgen:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Validate inputs
+        run: |
+          COMMAND="${{ inputs.command }}"
+
+          if [ "$COMMAND" = "generate" ] && [ -z "${{ inputs.feature }}" ]; then
+            echo "Error: 'feature' is required for generate command"
+            exit 1
+          fi
+
+          if [ "$COMMAND" = "fork-learn" ] && [ -z "${{ inputs.repo }}" ]; then
+            echo "Error: 'repo' is required for fork-learn command"
+            exit 1
+          fi
+
+          if [ "$COMMAND" = "merge" ]; then
+            if [ -z "${{ inputs.merge_branches }}" ]; then
+              echo "Error: 'merge_branches' is required for merge command"
+              exit 1
+            fi
+            if [ -z "${{ inputs.feature }}" ]; then
+              echo "Error: 'feature' (merge instruction) is required for merge command"
+              exit 1
+            fi
+          fi
+
+          if [ "$COMMAND" = "init" ] || [ "$COMMAND" = "diff" ]; then
+            if [ -z "${{ inputs.spec }}" ]; then
+              echo "Error: 'spec' path is required for $COMMAND command"
+              exit 1
+            fi
+          fi
+
+      # --- Fork-learn specific steps ---
+      - name: Parse repository (fork-learn)
+        if: inputs.command == 'fork-learn'
+        id: parse
+        run: |
+          REPO="${{ inputs.repo }}"
+          OWNER=$(echo $REPO | cut -d'/' -f1)
+          NAME=$(echo $REPO | cut -d'/' -f2)
+          echo "owner=$OWNER" >> $GITHUB_OUTPUT
+          echo "name=$NAME" >> $GITHUB_OUTPUT
+
+      - name: Fork repository
+        if: inputs.command == 'fork-learn'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh repo fork ${{ inputs.repo }} --clone=false || true
+          sleep 5
+
+      - name: Clone fork
+        if: inputs.command == 'fork-learn'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh repo clone ${{ github.actor }}/${{ steps.parse.outputs.name }}
+          cd ${{ steps.parse.outputs.name }}
+          git remote add upstream https://github.com/${{ inputs.repo }}.git
+
+      # --- Standard checkout for non-fork commands ---
+      - name: Checkout repository
+        if: inputs.command != 'fork-learn'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configure git
+        working-directory: ${{ inputs.command == 'fork-learn' && steps.parse.outputs.name || '.' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # --- Branch management ---
+      - name: Create branch
+        if: inputs.command == 'generate' || inputs.command == 'learn' || inputs.command == 'fork-learn'
+        id: branch
+        working-directory: ${{ inputs.command == 'fork-learn' && steps.parse.outputs.name || '.' }}
+        run: |
+          COMMAND="${{ inputs.command }}"
+          BRANCH="${{ inputs.branch }}"
+
+          if [ "$COMMAND" = "fork-learn" ]; then
+            BRANCH="gitgen-spec"
+          elif [ -z "$BRANCH" ] && [ "$COMMAND" = "generate" ]; then
+            FEATURE="${{ inputs.feature }}"
+            BRANCH="gitgen/$(echo "$FEATURE" | tr ' ' '-' | tr '[:upper:]' '[:lower:]' | head -c 50)"
+          fi
+
+          if [ -n "$BRANCH" ]; then
+            echo "name=$BRANCH" >> $GITHUB_OUTPUT
+            git checkout -b "$BRANCH" 2>/dev/null || git checkout "$BRANCH"
+          else
+            echo "name=$(git branch --show-current)" >> $GITHUB_OUTPUT
+          fi
+
+      # --- Execute gitgen command ---
+      - name: Run gitgen
+        working-directory: ${{ inputs.command == 'fork-learn' && steps.parse.outputs.name || '.' }}
+        run: |
+          COMMAND="${{ inputs.command }}"
+          DRY_RUN="${{ inputs.dry_run }}"
+          PROMPT="${{ inputs.custom_prompt }}"
+
+          # Build command
+          CMD="git gen"
+
+          case "$COMMAND" in
+            generate)
+              if [ "$DRY_RUN" = "true" ]; then
+                CMD="$CMD --dry-run"
+              fi
+              if [ -n "$PROMPT" ]; then
+                CMD="$CMD --prompt \"$PROMPT\""
+              fi
+              CMD="$CMD \"${{ inputs.feature }}\""
+              ;;
+            learn|fork-learn)
+              CMD="$CMD learn"
+              if [ -n "$PROMPT" ]; then
+                CMD="$CMD --prompt \"$PROMPT\""
+              fi
+              ;;
+            merge)
+              CMD="$CMD merge ${{ inputs.merge_branches }} \"${{ inputs.feature }}\""
+              if [ "$DRY_RUN" = "true" ]; then
+                CMD="$CMD --dry-run"
+              fi
+              ;;
+            init)
+              CMD="$CMD init ${{ inputs.spec }}"
+              if [ -n "$PROMPT" ]; then
+                CMD="$CMD --prompt \"$PROMPT\""
+              fi
+              ;;
+            diff)
+              CMD="$CMD diff ${{ inputs.spec }}"
+              if [ -n "$PROMPT" ]; then
+                CMD="$CMD --prompt \"$PROMPT\""
+              fi
+              ;;
+          esac
+
+          echo "→ Running: $CMD"
+          eval $CMD
+
+      # --- Commit and push ---
+      - name: Commit changes
+        if: inputs.dry_run != true && inputs.command != 'diff'
+        working-directory: ${{ inputs.command == 'fork-learn' && steps.parse.outputs.name || '.' }}
+        run: |
+          COMMAND="${{ inputs.command }}"
+
+          git add -A
+
+          case "$COMMAND" in
+            generate)
+              git commit -m "feat: ${{ inputs.feature }}" || echo "No changes to commit"
+              ;;
+            learn|fork-learn)
+              git commit -m "Add .gitgen.md specification" || echo "No changes to commit"
+              ;;
+            merge)
+              git commit -m "merge: ${{ inputs.feature }}" || echo "No changes to commit"
+              ;;
+            init)
+              git commit -m "Add spec for ${{ inputs.spec }}" || echo "No changes to commit"
+              ;;
+          esac
+
+      - name: Push changes
+        if: inputs.dry_run != true && inputs.command != 'diff'
+        working-directory: ${{ inputs.command == 'fork-learn' && steps.parse.outputs.name || '.' }}
+        run: |
+          git push -u origin ${{ steps.branch.outputs.name }}
+
+      # --- Create PR ---
+      - name: Create pull request
+        if: inputs.dry_run != true && inputs.command != 'diff'
+        working-directory: ${{ inputs.command == 'fork-learn' && steps.parse.outputs.name || '.' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COMMAND="${{ inputs.command }}"
+
+          case "$COMMAND" in
+            generate)
+              gh pr create \
+                --title "feat: ${{ inputs.feature }}" \
+                --body "## Summary
+
+          Generated by [gitgen](https://github.com/anthropics/gitgen)
+
+          **Feature:** ${{ inputs.feature }}
+          **Provider:** ${{ inputs.provider }}
+
+          ---
+          Generated with \`git gen\`" || echo "PR already exists or cannot be created"
+              ;;
+            learn)
+              gh pr create \
+                --title "Add .gitgen.md specification" \
+                --body "## Summary
+
+          This PR adds a \`.gitgen.md\` specification file.
+
+          The spec captures:
+          - Project patterns and conventions
+          - Tech stack detection
+          - Coding style guidelines
+
+          ---
+          Generated with \`git gen learn\`" || echo "PR already exists or cannot be created"
+              ;;
+            fork-learn)
+              gh pr create \
+                --repo ${{ inputs.repo }} \
+                --title "Add .gitgen.md specification" \
+                --body "## Summary
+
+          This PR adds a \`.gitgen.md\` specification file generated by [gitgen](https://github.com/anthropics/gitgen).
+
+          The spec captures:
+          - Project patterns and conventions
+          - Tech stack detection
+          - Directory structure
+          - Coding style guidelines
+
+          ## What is gitgen?
+
+          gitgen is a CLI tool that generates code matching your codebase patterns.
+
+          With this \`.gitgen.md\` file, contributors can use:
+          \`\`\`bash
+          git gen \"add new feature\"
+          \`\`\`
+
+          to generate code that matches your project's style.
+
+          ---
+          Generated with [gitgen](https://github.com/anthropics/gitgen)" || echo "PR already exists or cannot be created"
+              ;;
+            merge)
+              gh pr create \
+                --title "merge: ${{ inputs.feature }}" \
+                --body "## Summary
+
+          Merged branches: ${{ inputs.merge_branches }}
+
+          **Instruction:** ${{ inputs.feature }}
+
+          ---
+          Generated with \`git gen merge\`" || echo "PR already exists or cannot be created"
+              ;;
+            init)
+              gh pr create \
+                --title "Add spec for ${{ inputs.spec }}" \
+                --body "## Summary
+
+          Added gitgen spec file for \`${{ inputs.spec }}\`.
+
+          ---
+          Generated with \`git gen init\`" || echo "PR already exists or cannot be created"
+              ;;
+          esac
+
+      # --- Summary ---
+      - name: Job summary
+        if: always()
+        run: |
+          COMMAND="${{ inputs.command }}"
+          DRY_RUN="${{ inputs.dry_run }}"
+
+          echo "## gitgen: $COMMAND" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          case "$COMMAND" in
+            generate)
+              echo "**Feature:** ${{ inputs.feature }}" >> $GITHUB_STEP_SUMMARY
+              ;;
+            fork-learn)
+              echo "**Source repo:** ${{ inputs.repo }}" >> $GITHUB_STEP_SUMMARY
+              echo "**Your fork:** https://github.com/${{ github.actor }}/${{ steps.parse.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+              ;;
+            merge)
+              echo "**Branches:** ${{ inputs.merge_branches }}" >> $GITHUB_STEP_SUMMARY
+              echo "**Instruction:** ${{ inputs.feature }}" >> $GITHUB_STEP_SUMMARY
+              ;;
+            init|diff)
+              echo "**Spec:** ${{ inputs.spec }}" >> $GITHUB_STEP_SUMMARY
+              ;;
+          esac
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Provider:** ${{ inputs.provider }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ steps.branch.outputs.name }}" >> $GITHUB_STEP_SUMMARY
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "*(dry run - no changes made)*" >> $GITHUB_STEP_SUMMARY
+          fi

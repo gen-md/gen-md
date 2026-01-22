@@ -16,10 +16,10 @@ Example projects and templates.
 cd examples/01-basic
 
 # Preview the generation
-npx gitgen diff README.gitgen.md
+git gen diff README.gitgen.md
 
 # Generate the file
-npx gitgen README.gitgen.md
+git gen README.gitgen.md
 ```
 
 ## Creating Specs
@@ -53,9 +53,9 @@ Generate multiple versions to compare:
 
 ```bash
 # Generate with different approaches
-npx gitgen -b docs/minimal "README with just usage"
-npx gitgen -b docs/detailed "comprehensive README with examples"
+git gen -b docs/minimal "README with just usage"
+git gen -b docs/detailed "comprehensive README with examples"
 
 # Compare and merge
-npx gitgen merge docs/minimal docs/detailed "combine: minimal structure, detailed examples"
+git gen merge docs/minimal docs/detailed "combine: minimal structure, detailed examples"
 ```

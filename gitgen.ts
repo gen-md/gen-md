@@ -587,17 +587,17 @@ async function mergeBranches(
 // === CLI ===
 
 function printUsage(): void {
-  console.log(`gitgen - Generate code with git
+  console.log(`git gen - Generate code with git
 
 Usage:
-  npx gitgen learn                  Analyze repo, create .gitgen.md
-  npx gitgen "feature"              Generate files for a feature
-  npx gitgen -b <branch> "feature"  Create branch, then generate
-  npx gitgen merge <branches> "instruction"
-                                    Combine branches intelligently
-  npx gitgen <spec>.gitgen.md       Generate from spec file
-  npx gitgen diff <spec>            Preview spec generation
-  npx gitgen init <file>            Create spec from existing file
+  git gen learn                  Analyze repo, create .gitgen.md
+  git gen "feature"              Generate files for a feature
+  git gen -b <branch> "feature"  Create branch, then generate
+  git gen merge <branches> "instruction"
+                                 Combine branches intelligently
+  git gen <spec>.gitgen.md       Generate from spec file
+  git gen diff <spec>            Preview spec generation
+  git gen init <file>            Create spec from existing file
 
 Options:
   -b <branch>                    Create/switch to branch before generating
@@ -605,11 +605,11 @@ Options:
   --prompt "instructions"        Add custom instructions to any command
 
 Examples:
-  npx gitgen learn               Analyze project patterns
-  npx gitgen "add dark mode"     Generate on current branch
-  npx gitgen -b feature/auth "add auth"
+  git gen learn                  Analyze project patterns
+  git gen "add dark mode"        Generate on current branch
+  git gen -b feature/auth "add auth"
                                  Create branch + generate
-  npx gitgen merge feature/a feature/b "pick cleaner impl"
+  git gen merge feature/a feature/b "pick cleaner impl"
                                  Select best from branches
 
 Environment (pick one):
