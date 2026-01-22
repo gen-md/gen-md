@@ -1,6 +1,6 @@
 # gitgen Examples
 
-Example projects demonstrating gitgen usage.
+Example projects demonstrating how to explore the code graph.
 
 ## Examples
 
@@ -14,27 +14,36 @@ Example projects demonstrating gitgen usage.
 # Navigate to example
 cd examples/01-basic
 
-# Preview what would be generated
-gitgen diff README.gitgen.md
+# Preview the generation (peek into the graph)
+git gen diff README.gitgen.md
 
-# Generate the file
-gitgen README.gitgen.md
+# Generate the file (step into the graph)
+git gen README.gitgen.md
 ```
 
-## Creating Your Own
+## Creating Specs
 
-1. Create a `.gitgen.md` file:
-   ```yaml
-   ---
-   output: README.md
-   context:
-     - ./package.json
-   ---
+A spec is a portal into the code graph. Define what you want, gitgen generates it:
 
-   Generate a README with project overview and usage.
-   ```
+```yaml
+---
+output: README.md
+context:
+  - ./package.json
+---
 
-2. Generate:
-   ```bash
-   gitgen .
-   ```
+Generate a README with project overview and usage.
+```
+
+## Exploring Alternatives
+
+Generate multiple versions to compare:
+
+```bash
+# Generate with different contexts
+git gen -b docs/minimal "README with just usage"
+git gen -b docs/detailed "comprehensive README with examples"
+
+# Compare and merge
+git gen merge docs/minimal docs/detailed "combine: minimal structure, detailed examples"
+```

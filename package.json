@@ -8,14 +8,14 @@
   },
   "scripts": {
     "start": "npx tsx gitgen.ts",
-    "test": "vitest run",
-    "test:unit": "vitest run tests/unit",
-    "test:integration": "vitest run tests/integration",
-    "test:e2e": "vitest run tests/e2e",
-    "test:e2e:cli": "vitest run tests/e2e/cli.test.ts",
-    "test:e2e:web": "playwright test",
-    "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test": "dotenv -e .env -- vitest run",
+    "test:unit": "dotenv -e .env -- vitest run tests/unit",
+    "test:integration": "dotenv -e .env -- vitest run tests/integration",
+    "test:e2e": "dotenv -e .env -- vitest run tests/e2e",
+    "test:e2e:cli": "dotenv -e .env -- vitest run tests/e2e/cli.test.ts",
+    "test:e2e:web": "dotenv -e .env -- playwright test",
+    "test:watch": "dotenv -e .env -- vitest",
+    "test:coverage": "dotenv -e .env -- vitest run --coverage"
   },
   "repository": {
     "type": "git",
@@ -45,6 +45,7 @@
   "devDependencies": {
     "@playwright/test": "^1.40.0",
     "@types/node": "^20.0.0",
+    "dotenv-cli": "^8.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.3.0",
     "vitest": "^3.0.0"
