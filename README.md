@@ -1,6 +1,6 @@
 # git gen
 
-Generate code that matches your codebase patterns.
+Generate code with git.
 
 ```bash
 # Clone any repo
