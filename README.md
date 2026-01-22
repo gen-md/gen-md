@@ -15,8 +15,10 @@ Requires an API key from Anthropic, OpenAI, Google AI, OpenRouter, or AWS Bedroc
 git clone https://github.com/vercel/next.js
 cd next.js
 
-# Analyze the codebase (creates .gitgen.md)
+# Analyze the codebase
 npx gitgen learn
+# → Analyzing repository...
+# → Created .gitgen.md
 
 # Generate two approaches on separate branches
 npx gitgen -b feature/analytics-v1 "add analytics middleware using cookies"
@@ -29,6 +31,36 @@ git checkout feature/analytics-v2 && npm test
 # Merge the better one
 npx gitgen merge feature/analytics-v1 feature/analytics-v2 "pick the cleaner implementation"
 ```
+
+### What `learn` creates
+
+The `.gitgen.md` file captures your project's patterns:
+
+```markdown
+---
+context:
+  - ./package.json
+  - ./src/index.ts
+---
+# next.js - React framework for production
+
+## Tech Stack
+- Runtime: Node.js
+- Language: TypeScript
+- Testing: Jest
+
+## Coding Conventions
+- Functions: camelCase
+- Files: kebab-case.ts
+- 2-space indentation
+
+## Adding New Features
+1. Add route in pages/ or app/
+2. Follow existing component patterns
+3. Include tests in __tests__/
+```
+
+This spec tells gitgen how to generate code that matches your codebase.
 
 ## Commands
 
