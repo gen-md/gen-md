@@ -15,9 +15,31 @@ inputs:
     description: 'Show plan without generating files'
     required: false
     default: 'false'
+  provider:
+    description: 'LLM provider: anthropic, bedrock, openrouter'
+    required: false
+    default: 'anthropic'
+  model:
+    description: 'Model alias or ID (e.g., claude-sonnet, claude-opus)'
+    required: false
+
+  # Provider-specific keys
   anthropic-api-key:
-    description: 'Anthropic API key'
-    required: true
+    description: 'Anthropic API key (for provider: anthropic)'
+    required: false
+  openrouter-api-key:
+    description: 'OpenRouter API key (for provider: openrouter)'
+    required: false
+  aws-access-key-id:
+    description: 'AWS Access Key ID (for provider: bedrock)'
+    required: false
+  aws-secret-access-key:
+    description: 'AWS Secret Access Key (for provider: bedrock)'
+    required: false
+  aws-region:
+    description: 'AWS Region (for provider: bedrock)'
+    required: false
+    default: 'us-east-1'
 
 outputs:
   branch:
@@ -43,7 +65,13 @@ runs:
       id: gen
       shell: bash
       env:
+        GITGEN_PROVIDER: ${{ inputs.provider }}
+        GITGEN_MODEL: ${{ inputs.model }}
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        OPENROUTER_API_KEY: ${{ inputs.openrouter-api-key }}
+        AWS_ACCESS_KEY_ID: ${{ inputs.aws-access-key-id }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.aws-secret-access-key }}
+        AWS_REGION: ${{ inputs.aws-region }}
       run: |
         ARGS=""
         if [ -n "${{ inputs.branch }}" ]; then

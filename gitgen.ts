@@ -8,8 +8,10 @@ import { dirname, resolve, relative, join, basename } from "node:path";
 import { existsSync } from "node:fs";
 import { execSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import Anthropic from "@anthropic-ai/sdk";
 import matter from "gray-matter";
+import { llm, getProviderDescription } from "./src/providers/index.js";
+import { validateOutput, formatValidationResult } from "./src/validation/index.js";
+import { generateProjectSpec, getRepoSummary } from "./src/learn/index.js";
 
 // === TYPES ===
 
@@ -32,8 +34,6 @@ interface GenOptions {
 
 // === CONFIG ===
 
-const DEFAULT_MODEL = "claude-sonnet-4-20250514";
-const MAX_TOKENS = 8192;
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PROMPTS_DIR = join(__dirname, "prompts");
 
@@ -216,29 +216,6 @@ function findRelatedFiles(targetPath: string, allFiles: string[]): string[] {
   return [...new Set([...related, ...similar])].slice(0, 3);
 }
 
-// === LLM ===
-
-async function llm(prompt: string, model = DEFAULT_MODEL): Promise<string> {
-  const client = new Anthropic();
-  const response = await client.messages.create({
-    model,
-    max_tokens: MAX_TOKENS,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const content = response.content
-    .filter((block): block is Anthropic.TextBlock => block.type === "text")
-    .map((block) => block.text)
-    .join("\n");
-
-  return stripCodeFences(content);
-}
-
-function stripCodeFences(content: string): string {
-  const fencePattern = /^```[\w]*\n([\s\S]*?)\n```$/;
-  const match = content.trim().match(fencePattern);
-  return match ? match[1] : content;
-}
 
 // === GENERATE ===
 
@@ -329,6 +306,13 @@ async function generateFeature(
   const jsonMatch = planResponse.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("Failed to parse implementation plan");
 
+  // Validate the plan
+  const planValidation = validateOutput(jsonMatch[0], { type: "plan" });
+  if (!planValidation.valid) {
+    console.error(formatValidationResult(planValidation, "implementation plan"));
+    throw new Error("Invalid implementation plan");
+  }
+
   const plan = JSON.parse(jsonMatch[0]) as {
     files: Array<{ path: string; action: string; description: string }>;
   };
@@ -381,6 +365,16 @@ async function generateFeature(
     });
 
     const fileContent = await llm(filePrompt);
+
+    // Validate the generated content
+    const validation = validateOutput(fileContent, { type: "file", filePath: file.path });
+    if (!validation.valid) {
+      console.error(formatValidationResult(validation, file.path));
+    } else if (validation.warnings.length > 0) {
+      for (const warning of validation.warnings) {
+        console.log(`  ⚠ ${warning}`);
+      }
+    }
 
     // Ensure directory exists
     const dir = dirname(file.path);
@@ -456,6 +450,7 @@ Usage:
   git gen .                      Generate from .gitgen.md spec
   git gen diff .                 Preview spec generation
   git gen init <file>            Create spec from existing file
+  git gen learn                  Analyze repo, create .gitgen.md
 
 Options:
   -b <branch>                    Create/switch to branch before generating
@@ -467,9 +462,19 @@ Examples:
                                  Create branch + generate
   git gen "add password reset"   Add more to current branch
   git gen --dry-run "add api"    Preview what would be generated
+  git gen learn                  Learn project patterns
 
-Environment:
-  ANTHROPIC_API_KEY  Required for generation
+Environment (pick one):
+  ANTHROPIC_API_KEY              Anthropic API key
+  OPENROUTER_API_KEY             OpenRouter API key
+  AWS_ACCESS_KEY_ID +            AWS Bedrock credentials
+  AWS_SECRET_ACCESS_KEY
+
+Optional:
+  GITGEN_PROVIDER                Force provider: anthropic, bedrock, openrouter
+  GITGEN_MODEL                   Model alias: claude-sonnet, claude-opus, claude-haiku
+
+Provider: ${getProviderDescription()}
 `);
 }
 
@@ -500,8 +505,23 @@ async function main(): Promise<void> {
   const command = positional[0];
 
   try {
-    // Subcommands: init, diff
-    if (command === "init") {
+    // Subcommands: init, diff, learn
+    if (command === "learn") {
+      console.log(`→ Analyzing repository...`);
+      const summary = await getRepoSummary();
+      console.log(summary);
+      console.log(`→ Generating spec...`);
+      const spec = await generateProjectSpec();
+
+      // Validate the generated spec
+      const validation = validateOutput(spec, { type: "spec" });
+      if (!validation.valid) {
+        console.error(formatValidationResult(validation, ".gitgen.md"));
+      }
+
+      await writeFile(".gitgen.md", spec, "utf-8");
+      console.log(`✓ Created .gitgen.md`);
+    } else if (command === "init") {
       const filePath = positional[1];
       if (!filePath) {
         console.error("Error: No file provided");
