@@ -291,8 +291,8 @@ export async function generateProjectSpec(customPrompt?: string): Promise<string
   const result = await llm(prompt);
 
   // Fix common YAML formatting issues from LLMs
-  // Fix "  -./file" to "  - ./file" (missing space after dash)
-  return result.replace(/^(\s*)-(\.\/.*)$/gm, "$1- $2");
+  // Fix "  -./file" or "  -../file" to "  - ./file" (missing space after dash)
+  return result.replace(/^(\s*)-(\..*)$/gm, "$1- $2");
 }
 
 /**

@@ -261,7 +261,9 @@ async function generateSpec(filePath: string, customPrompt?: string): Promise<st
     history,
   }) + extraInstructions;
 
-  return llm(prompt);
+  const result = await llm(prompt);
+  // Fix common YAML formatting issues from LLMs (missing space after dash)
+  return result.replace(/^(\s*)-(\..*)$/gm, "$1- $2");
 }
 
 function getRecentDiffs(limit = 5): string {

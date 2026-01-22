@@ -1,12 +1,17 @@
-You are analyzing a repository to create a comprehensive .gitgen.md specification file.
+You are analyzing a repository to create a comprehensive .gitgen.md specification file that captures the project's patterns, conventions, and architecture.
 
 <repository-analysis>
-<tech-stack>{{techStack}}</tech-stack>
+
+<tech-stack>
+Detected technologies: {{techStack}}
+</tech-stack>
 
 <conventions>
 Commit style: {{commitStyle}}
+
 Naming patterns:
 {{namingPatterns}}
+
 Directory patterns:
 {{directoryPatterns}}
 </conventions>
@@ -17,6 +22,7 @@ Directory patterns:
 
 {{#recentDiffs}}
 <recent-diffs>
+Study these diffs to understand coding style, formatting, and patterns:
 {{recentDiffs}}
 </recent-diffs>
 {{/recentDiffs}}
@@ -28,9 +34,10 @@ Directory patterns:
 <file-structure>
 {{fileStructure}}
 </file-structure>
+
 </repository-analysis>
 
-Create a .gitgen.md file that will help generate new code matching this project's patterns.
+YOUR TASK: Create a .gitgen.md specification that will help generate new code matching this project's established patterns.
 
 THE OUTPUT MUST START WITH THIS EXACT YAML FRONTMATTER FORMAT:
 ```
@@ -43,61 +50,86 @@ context:
 ---
 ```
 
-IMPORTANT: Each context item MUST have a space after the dash: "  - ./file" NOT "  -./file"
+CRITICAL YAML RULES:
+- Each context item MUST have a space after the dash: "  - ./file" NOT "  -./file"
+- Use two spaces for indentation, not tabs
+- The "output:" field should be empty (it's a template)
+- List 3-5 most important context files that define the project
 
-THEN WRITE A COMPREHENSIVE MARKDOWN DOCUMENT with these sections:
+THEN WRITE A COMPREHENSIVE MARKDOWN DOCUMENT:
 
-# [Project Name] - [Brief Description]
+# [Project Name] - [Brief One-Line Description]
 
 ## Project Overview
-[1-2 paragraphs explaining what the project does]
+[1-2 paragraphs explaining what the project does, its main purpose, and key functionality]
 
 ## Tech Stack
 - **Runtime**: [e.g., Node.js with ESM modules]
 - **Language**: [e.g., TypeScript (strict mode)]
-- [List other key technologies, frameworks, build tools]
+- **Build Tool**: [e.g., tsc, esbuild, webpack]
+- **Testing**: [e.g., Vitest, Jest]
+- [Other key technologies, frameworks]
 
 ## Architecture
-[Describe the main modules/components with their file locations and responsibilities. Use subsections like:]
+[Describe the main modules/components]
 
 ### [Component Name] (`path/to/file.ts`)
-[Description of what this component does, key functions, exports]
+[What this component does, key functions, exports, dependencies]
+
+### [Another Component] (`path/to/another.ts`)
+[Description...]
 
 ## Coding Conventions
 
 ### File Organization
-- [Directory] - [Purpose]
+- `src/` - [Purpose]
+- `tests/` - [Purpose]
+- [Other directories...]
 
 ### Naming
-- Functions: [convention and examples]
-- Types/Interfaces: [convention and examples]
-- Files: [convention and examples]
-- Constants: [convention and examples]
+- Functions: [convention] (e.g., `camelCase`, examples: `getUserById`, `parseConfig`)
+- Types/Interfaces: [convention] (e.g., `PascalCase`, examples: `UserConfig`, `ApiResponse`)
+- Files: [convention] (e.g., `kebab-case.ts`, examples: `user-service.ts`)
+- Constants: [convention] (e.g., `UPPER_SNAKE_CASE`, examples: `MAX_RETRIES`)
 
 ### Code Style
-- [List specific patterns observed in the codebase]
+- [Indentation: spaces/tabs, count]
+- [Import organization]
+- [Error handling patterns]
+- [Comment style]
+- [Other observed patterns]
 
 ### Commit Style
-- [Describe the commit message format used]
+- [Format, e.g., conventional commits: "feat: description"]
+- [Examples from recent commits]
 
 ## Adding New Features
-[Provide clear guidance on how new code should be structured, including:]
 
-1. **[Guideline 1]** - [Explanation]
-2. **[Guideline 2]** - [Explanation]
-[etc.]
+Guidelines for adding new code that matches project patterns:
 
-### Example: [Common Task Type]
+1. **[First guideline]** - [Explanation with specific reference to project]
+2. **[Second guideline]** - [Explanation]
+3. **[Third guideline]** - [Explanation]
+[Continue as needed...]
+
+### Example: [Common Task Type in This Project]
 ```typescript
-// Show a code example of how to add something new
+// Show a realistic code example that demonstrates project patterns
+// Use actual naming conventions, imports, and style from the analysis
 ```
 
-CRITICAL FORMAT RULES:
-1. Start with EXACTLY "---" on line 1
-2. YAML frontmatter uses "  - " (two spaces, dash, space) for array items - THIS IS CRITICAL
-3. Close frontmatter with EXACTLY "---" on its own line
-4. Use proper markdown with # headers
-5. Be specific - reference actual files, functions, and patterns from the analysis
-6. Include code examples where helpful
+QUALITY REQUIREMENTS:
+1. Be SPECIFIC - reference actual file paths, function names, and patterns from the analysis
+2. Be ACTIONABLE - provide guidance that helps generate matching code
+3. Be ACCURATE - only document patterns you can verify from the provided analysis
+4. Include CODE EXAMPLES that demonstrate the project's actual style
 
-Output ONLY the .gitgen.md content. No explanation before or after. Start immediately with ---
+CRITICAL OUTPUT RULES:
+1. Start with EXACTLY "---" on line 1 (no blank lines before)
+2. YAML frontmatter uses "  - " (two spaces, dash, space) for array items
+3. Close frontmatter with EXACTLY "---" on its own line
+4. Use proper markdown with # headers (not underlines)
+5. NO preamble like "Here is the spec:" or "Sure!"
+6. NO explanation after the spec
+
+Output ONLY the .gitgen.md content. Start immediately with ---
